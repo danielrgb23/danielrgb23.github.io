@@ -229,7 +229,7 @@ const contactLinks = <LinkAction>[
   LinkAction('GitHub', 'https://github.com/danielrgb23'),
   LinkAction('LinkedIn', 'https://linkedin.com/in/daniel-jasmelino'),
   LinkAction('Blog', 'https://daniel-jasmelino.hashnode.dev'),
-  LinkAction('Instagram', 'https://www.instagram.com/5am_daniel_jasmelino/'),
+  LinkAction('Instagram', 'https://www.instagram.com/daniel.jasmelino/'),
   LinkAction('Google Dev', 'https://g.dev/daniel-jasmelino'),
   LinkAction('E-mail', 'mailto:daniel.augusto.jasmelino@gmail.com'),
 ];
