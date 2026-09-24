@@ -32661,11 +32661,11 @@ gNH(){var s=this.a
 if(s instanceof A.dH)return s
 return this.a=new A.dH(s)},
 ga9W(){var s,r,q,p,o,n=this
-if(n.c===1)return B.lg
+if(n.c===1)return B.lh
 s=n.d
 r=J.bt(s)
 q=r.gD(s)-J.cU(n.e)-n.f
-if(q===0)return B.lg
+if(q===0)return B.lh
 p=[]
 for(o=0;o<q;++o)p.push(r.j(s,o))
 p.$flags=3
@@ -37276,11 +37276,11 @@ q=r?B.a3:B.ch
 p=r?B.a3:B.ch
 o=new A.aU(4,4)
 p=A.aeD(n,n,n,n,n,n,n,n,n,q,n,n,B.kG,n,new A.cN(new A.cF(o,o,o,o),B.t),new A.bl(p,2,B.A,-1),n,n,n,n)
-o=B.lk[s]
+o=B.lg[s]
 q=$.ad2()
 i.push(A.aeC(A.br(o.a,n,q.tp(r?B.a3:B.ch),n),new A.RA(this,s),p))}return A.fe(A.c([m,B.aS,l,B.aS,k,B.iV,A.xY(B.wr,i,B.cF,14,14),B.JW,A.br("Feito com Flutter de verdade e caf\xe9. \xa9 2026 Daniel Augusto.",n,$.agk(),B.aF)],j),B.ai,B.X,B.a4)}}
 A.RA.prototype={
-$0(){return this.a.rz(B.lk[this.b].b)},
+$0(){return this.a.rz(B.lg[this.b].b)},
 $S:0}
 A.ul.prototype={
 ai(){return new A.yG(null,null)}}
@@ -37598,11 +37598,11 @@ r.toString
 A.adp(r,"\ud83c\udfae KONAMI CODE! +100 XP")}return B.bJ},
 N(a){var s,r,q,p=this,o=null,n=A.bE(a,o,t.w).w.a.a<640,m=[new A.ul(new A.a5w(p),o),B.Kk,B.G2,B.Kj,B.zD],l=p.d,k=p.gXL(),j=t.E,i=A.c([],j)
 for(s=p.x,r=0;r<5;++r){q=s[r]
-i.push(A.hw(o,new A.t3(B.ar,o,o,new A.fF(B.xm,m[r],o),o),B.x,o,o,o,o,q,o,B.As,o,o,1/0))}l=A.pE(B.c7,A.c([B.HI,A.atY(A.fe(A.c([new A.K2(B.li,l,p.e,n,k,o),A.Tf(A.ajL(A.fe(i,B.ai,B.X,B.a4),p.w),1)],j),B.ai,B.X,B.a4),!0)],j),B.W,B.cA)
+i.push(A.hw(o,new A.t3(B.ar,o,o,new A.fF(B.xm,m[r],o),o),B.x,o,o,o,o,q,o,B.As,o,o,1/0))}l=A.pE(B.c7,A.c([B.HI,A.atY(A.fe(A.c([new A.K2(B.lj,l,p.e,n,k,o),A.Tf(A.ajL(A.fe(i,B.ai,B.X,B.a4),p.w),1)],j),B.ai,B.X,B.a4),!0)],j),B.W,B.cA)
 if(n){j=p.d
 i=A.c([],t.ur)
 for(r=0;r<5;++r){s=A.arO(B.Dm[r],o)
-q=B.li[r]
+q=B.lj[r]
 i.push(new A.C3(s,s,q))}k=new A.rQ(i,k,j,B.xh,B.bD,B.a3,B.bE,10,10,o)}else k=o
 return A.os(!0,o,new A.wx(l,B.fV,k,o),o,o,o,p.f,!0,o,o,o,p.ga_O(),o,o)}}
 A.a5v.prototype={
@@ -47503,8 +47503,8 @@ s=r.Z
 r.dw=s==null?null:s.gDA()
 a.a=!1},
 mj(a,b,c){var s,r,q,p,o=this
-o.fE=A.aju(o.fE,B.lh)
-o.jJ=A.aju(o.jJ,B.lh)
+o.fE=A.aju(o.fE,B.li)
+o.jJ=A.aju(o.jJ,B.li)
 s=o.fE
 r=s!=null&&!s.gP(s)
 s=o.jJ
@@ -55012,7 +55012,7 @@ A.eX.prototype={
 G(){return"ModifierKey."+this.b}}
 A.vY.prototype={
 ga9o(){var s,r,q=A.t(t.xS,t.Di)
-for(s=0;s<9;++s){r=B.lj[s]
+for(s=0;s<9;++s){r=B.lk[s]
 if(this.a8F(r))q.m(0,r,B.cl)}return q}}
 A.iX.prototype={}
 A.a_o.prototype={
@@ -55050,7 +55050,7 @@ i=$.c4
 if(i!=null)i.$1(new A.aL(r,q,"services library",j,p,!1))}}return!1},
 a27(a1){var s,r,q,p,o,n,m,l,k,j,i,h,g=a1.c,f=g.ga9o(),e=t.v3,d=A.t(e,t.r),c=A.as(e),b=this.d,a=A.dk(new A.aC(b,A.l(b).h("aC<1>")),e),a0=a1 instanceof A.kq
 if(a0)a.B(0,g.ghi())
-for(s=g.a,r=null,q=0;q<9;++q){p=B.lj[q]
+for(s=g.a,r=null,q=0;q<9;++q){p=B.lk[q]
 o=$.anE()
 n=o.j(0,new A.cd(p,B.b1))
 if(n==null)continue
@@ -71502,8 +71502,8 @@ B.Qa=new A.jj(B.wv,B.wu)
 B.Dr=s([B.Q8,B.Qb,B.Q9,B.Qa],A.ac("v<jj>"))
 B.D8=s(["Rede social","Flutter","1M+ usu\xe1rios"],t.s)
 B.BE=new A.e0("Google Play","https://play.google.com/store/apps/details?id=net.itsnoon.mobile.itsnoon&hl=pt_BR&pli=1")
-B.BK=new A.e0("App Store","https://apps.apple.com/br/app/sevirologia/id1471439609")
-B.CB=s([B.BE,B.BK],t.fI)
+B.BL=new A.e0("App Store","https://apps.apple.com/br/app/sevirologia/id1471439609")
+B.CB=s([B.BE,B.BL],t.fI)
 B.Ki=new A.kE("FASE 1 \xb7 BOSS","Servirologia",B.D8,"App que recompensa quem compartilha informa\xe7\xe3o verdadeira e \xfatil com a comunidade. Publicado nas duas lojas, com mais de 1 milh\xe3o de usu\xe1rios \u2014 atuei no desenvolvimento junto com o time.",!0,B.CB)
 B.CK=s(["Flutter","Clean Arch","Python"],t.s)
 B.BP=new A.e0("GitHub","https://github.com/danielrgb23/quiz_technical_app")
@@ -71518,18 +71518,25 @@ B.BG=new A.e0("GitHub","https://github.com/danielrgb23/to_do_list_test_fibbo")
 B.DO=s([B.BG],t.fI)
 B.Ke=new A.kE("FASE 4","To Do List \u2014 Teste Fibbo",B.CT,"Teste t\xe9cnico pra Fibbo (3Wings): lista de tarefas com login como convidado ou conta, backup e recupera\xe7\xe3o na nuvem, e testes automatizados com Mockito.",!1,B.DO)
 B.CX=s(["Flutter","Bloc","Clean Arch"],t.s)
-B.BM=new A.e0("GitHub","https://github.com/danielrgb23/ilia-flutter-challenge")
-B.CH=s([B.BM],t.fI)
+B.BN=new A.e0("GitHub","https://github.com/danielrgb23/ilia-flutter-challenge")
+B.CH=s([B.BN],t.fI)
 B.Kf=new A.kE("FASE 5","Ilia Movies",B.CX,"Desafio t\xe9cnico pra \xedlia digital: app de filmes com inje\xe7\xe3o de depend\xeancia, Bloc pro gerenciamento de estado e testes com Mockito.",!1,B.CH)
 B.Dt=s([B.Ki,B.Kg,B.Kh,B.Ke,B.Kf],A.ac("v<kE>"))
 B.Dv=s([35,30,20,25,30,35,30,25,25],t.n)
+B.BH=new A.e0("GitHub","https://github.com/danielrgb23")
+B.BK=new A.e0("LinkedIn","https://linkedin.com/in/daniel-jasmelino")
+B.BI=new A.e0("Blog","https://daniel-jasmelino.hashnode.dev")
+B.BJ=new A.e0("Instagram","https://www.instagram.com/daniel.jasmelino/")
+B.BM=new A.e0("Google Dev","https://g.dev/daniel-jasmelino")
+B.BO=new A.e0("E-mail","mailto:daniel.augusto.jasmelino@gmail.com")
+B.lg=s([B.BH,B.BK,B.BI,B.BJ,B.BM,B.BO],t.fI)
 B.Dx=s(["click","scroll"],t.s)
 B.xx=new A.nM()
 B.iv=new A.Gw(1,"page")
 B.iw=new A.ev(B.ax,B.iv)
 B.Dy=s([B.xx,B.iw],A.ac("v<aI>"))
 B.DG=s([],t.QP)
-B.lh=s([],A.ac("v<aAd>"))
+B.li=s([],A.ac("v<aAd>"))
 B.DI=s([],t.ER)
 B.DJ=s([],t.tc)
 B.eC=s([],t.jl)
@@ -71543,9 +71550,9 @@ B.aa=s([],t.oU)
 B.DH=s([],t.Lx)
 B.Rn=s([],t.E)
 B.DC=s([],t.t)
-B.lg=s([],t.ee)
+B.lh=s([],t.ee)
 B.DD=s([],t.XS)
-B.li=s(["HOME","STATUS","MISS\xd5ES","FASES","CONTATO"],t.s)
+B.lj=s(["HOME","STATUS","MISS\xd5ES","FASES","CONTATO"],t.s)
 B.d8=s([B.bx,B.bf,B.dS,B.dT,B.fB],t.QP)
 B.CC=s([0.001200833568784504,0.002389694492170889,0.0002795742885861124],t.n)
 B.Dz=s([0.0005891086651375999,0.0029785502573438758,0.0003270666104008398],t.n)
@@ -71562,7 +71569,7 @@ B.ia=new A.eX(5,"numLockModifier")
 B.ib=new A.eX(6,"scrollLockModifier")
 B.ic=new A.eX(7,"functionModifier")
 B.qp=new A.eX(8,"symbolModifier")
-B.lj=s([B.cn,B.co,B.cp,B.cq,B.i9,B.ia,B.ib,B.ic,B.qp],A.ac("v<eX>"))
+B.lk=s([B.cn,B.co,B.cp,B.cq,B.i9,B.ia,B.ib,B.ic,B.qp],A.ac("v<eX>"))
 B.Dn=s(["Trabalho na configura\xe7\xe3o das apps em Flutter e na integra\xe7\xe3o com o back-end.","Liderei a migra\xe7\xe3o do chat com IA pra uma infraestrutura mais robusta na nuvem, com um agente que mant\xe9m o contexto da conversa.","Entreguei features centrais do produto, como perfil de usu\xe1rio, gera\xe7\xe3o autom\xe1tica de curr\xedculo e rede profissional \u2014 al\xe9m de autentica\xe7\xe3o, notifica\xe7\xf5es e testes de performance."],t.s)
 B.E7=s(["Flutter","Next.js","Google ADK","Firebase"],t.s)
 B.HP=new A.ko("Karrera AI","Engenheiro Web & Mobile","12/2024 \u2014 atual","Ajudo a construir o produto do zero: do app mobile at\xe9 o agente de IA que conversa com o usu\xe1rio.",B.Dn,B.E7)
@@ -71589,13 +71596,6 @@ B.eL=new A.e(97)
 B.E5=s([B.av,B.av,B.aC,B.aC,B.at,B.au,B.at,B.au,B.i5,B.eL],t.w3)
 B.E6=s(["pointerdown","pointermove","pointerleave","pointerup","pointercancel","touchstart","touchend","touchmove","touchcancel","mousedown","mousemove","mouseleave","mouseup","wheel"],t.s)
 B.Ea=s([B.es,B.kR,B.kS,B.l,B.M,B.hI,B.bm,B.kT,B.hJ],A.ac("v<dy>"))
-B.BH=new A.e0("GitHub","https://github.com/danielrgb23")
-B.BJ=new A.e0("LinkedIn","https://linkedin.com/in/daniel-jasmelino")
-B.BI=new A.e0("Blog","https://daniel-jasmelino.hashnode.dev")
-B.BO=new A.e0("Instagram","https://www.instagram.com/5am_daniel_jasmelino/")
-B.BL=new A.e0("Google Dev","https://g.dev/daniel-jasmelino")
-B.BN=new A.e0("E-mail","mailto:daniel.augusto.jasmelino@gmail.com")
-B.lk=s([B.BH,B.BJ,B.BI,B.BO,B.BL,B.BN],t.fI)
 B.Eb=s([0.015176349177441876,0.045529047532325624,0.07588174588720938,0.10623444424209313,0.13658714259697685,0.16693984095186062,0.19729253930674434,0.2276452376616281,0.2579979360165119,0.28835063437139563,0.3188300904430532,0.350925934958123,0.3848314933096426,0.42057480301049466,0.458183274052838,0.4976837250274023,0.5391024159806381,0.5824650784040898,0.6277969426914107,0.6751227633498623,0.7244668422128921,0.775853049866786,0.829304845476233,0.8848452951698498,0.942497089126609,1.0022825574869039,1.0642236851973577,1.1283421258858297,1.1946592148522128,1.2631959812511864,1.3339731595349034,1.407011200216447,1.4823302800086415,1.5599503113873272,1.6398909516233677,1.7221716113234105,1.8068114625156377,1.8938294463134073,1.9832442801866852,2.075074464868551,2.1693382909216234,2.2660538449872063,2.36523901573795,2.4669114995532007,2.5710888059345764,2.6777882626779785,2.7870270208169257,2.898822059350997,3.0131901897720907,3.1301480604002863,3.2497121605402226,3.3718988244681087,3.4967242352587946,3.624204428461639,3.754355295633311,3.887192587735158,4.022731918402185,4.160988767090289,4.301978482107941,4.445716283538092,4.592217266055746,4.741496401646282,4.893568542229298,5.048448422192488,5.20615066083972,5.3666897647573375,5.5300801301023865,5.696336044816294,5.865471690767354,6.037501145825082,6.212438385869475,6.390297286737924,6.571091626112461,6.7548350853498045,6.941541251256611,7.131223617812143,7.323895587840543,7.5195704746346665,7.7182615035334345,7.919981813454504,8.124744458384042,8.332562408825165,8.543448553206703,8.757415699253682,8.974476575321063,9.194643831691977,9.417930041841839,9.644347703669503,9.873909240696694,10.106627003236781,10.342513269534024,10.58158024687427,10.8238400726681,11.069304815507364,11.317986476196008,11.569896988756009,11.825048221409341,12.083451977536606,12.345119996613247,12.610063955123938,12.878295467455942,13.149826086772048,13.42466730586372,13.702830557985108,13.984327217668513,14.269168601521828,14.55736596900856,14.848930523210871,15.143873411576273,15.44220572664832,15.743938506781891,16.04908273684337,16.35764934889634,16.66964922287304,16.985093187232053,17.30399201960269,17.62635644741625,17.95219714852476,18.281524751807332,18.614349837764564,18.95068293910138,19.290534541298456,19.633915083172692,19.98083495742689,20.331304511189067,20.685334046541502,21.042933821039977,21.404114048223256,21.76888489811322,22.137256497705877,22.50923893145328,22.884842241736916,23.264076429332462,23.6469514538663,24.033477234264016,24.42366364919083,24.817520537484558,25.21505769858089,25.61628489293138,26.021211842414342,26.429848230738664,26.842203703840827,27.258287870275353,27.678110301598522,28.10168053274597,28.529008062403893,28.96010235337422,29.39497283293396,29.83362889318845,30.276079891419332,30.722335150426627,31.172403958865512,31.62629557157785,32.08401920991837,32.54558406207592,33.010999283389665,33.4802739966603,33.953417292456834,34.430438229418264,34.911345834551085,35.39614910352207,35.88485700094671,36.37747846067349,36.87402238606382,37.37449765026789,37.87891309649659,38.38727753828926,38.89959975977785,39.41588851594697,39.93615253289054,40.460400508064545,40.98864111053629,41.520882981230194,42.05713473317016,42.597404951718396,43.141702194811224,43.6900349931913,44.24241185063697,44.798841244188324,45.35933162437017,45.92389141541209,46.49252901546552,47.065252796817916,47.64207110610409,48.22299226451468,48.808024568002054,49.3971762874833,49.9904556690408,50.587870934119984,51.189430279724725,51.79514187861014,52.40501387947288,53.0190544071392,53.637271562750364,54.259673423945976,54.88626804504493,55.517063457223934,56.15206766869424,56.79128866487574,57.43473440856916,58.08241284012621,58.734331877617365,59.39049941699807,60.05092333227251,60.715611475655585,61.38457167773311,62.057811747619894,62.7353394731159,63.417162620860914,64.10328893648692,64.79372614476921,65.48848194977529,66.18756403501224,66.89098006357258,67.59873767827808,68.31084450182222,69.02730813691093,69.74813616640164,70.47333615344107,71.20291564160104,71.93688215501312,72.67524319850172,73.41800625771542,74.16517879925733,74.9167682708136,75.67278210128072,76.43322770089146,77.1981124613393,77.96744375590167,78.74122893956174,79.51947534912904,80.30219030335869,81.08938110306934,81.88105503125999,82.67721935322541,83.4778813166706,84.28304815182372,85.09272707154808,85.90692527145302,86.72564993000343,87.54890820862819,88.3767072518277,89.2090541872801,90.04595612594655,90.88742016217518,91.73345337380438,92.58406282226491,93.43925555268066,94.29903859396902,95.16341895893969,96.03240364439274,96.9059996312159,97.78421388448044,98.6670533535366,99.55452497210776],t.n)
 B.k=new A.uZ(0,"ignored")
 B.af=new A.e(4294967304)
