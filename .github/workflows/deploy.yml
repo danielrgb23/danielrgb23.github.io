@@ -34,7 +34,7 @@ jobs:
         run: flutter test
 
       - name: Build web
-        run: flutter build web --release --base-href "/"
+        run: flutter build web --release
 
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
