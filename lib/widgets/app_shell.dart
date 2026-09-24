@@ -44,22 +44,59 @@ class _AppShellState extends State<AppShell> {
   ];
   int _konamiProgress = 0;
 
-  void _goTo(int i) {
-    if (i < 0 || i >= _sections.length) return;
-    setState(() {
-      _index = i;
-      _visited.add(i);
-    });
-    if (i == _sections.length - 1) {
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          AchievementToast.show(
-            context,
-            '🏆 CONQUISTA DESBLOQUEADA:\nChegou até o fim da run!',
-          );
-        }
+  final _scroll = ScrollController();
+  final _keys = List.generate(_sections.length, (_) => GlobalKey());
+  bool _achieved = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    // Active section = last one whose top has passed the viewport's upper third.
+    final threshold = MediaQuery.of(context).size.height * 0.35;
+    var active = 0;
+    for (var i = 0; i < _keys.length; i++) {
+      final box = _keys[i].currentContext?.findRenderObject() as RenderBox?;
+      if (box == null || !box.attached) continue;
+      if (box.localToGlobal(Offset.zero).dy <= threshold) active = i;
+    }
+    final atBottom = _scroll.hasClients &&
+        _scroll.position.pixels >= _scroll.position.maxScrollExtent - 4;
+    if (atBottom) active = _sections.length - 1;
+    if (active != _index || !_visited.contains(active)) {
+      setState(() {
+        _index = active;
+        _visited.addAll({for (var i = 0; i <= active; i++) i});
       });
     }
+    if (active == _sections.length - 1 && !_achieved) {
+      _achieved = true;
+      AchievementToast.show(
+        context,
+        '🏆 CONQUISTA DESBLOQUEADA:\nChegou até o fim da run!',
+      );
+    }
+  }
+
+  void _goTo(int i) {
+    if (i < 0 || i >= _sections.length) return;
+    final ctx = _keys[i].currentContext;
+    if (ctx == null) return;
+    Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeInOutCubic,
+    );
   }
 
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
@@ -110,45 +147,27 @@ class _AppShellState extends State<AppShell> {
                     onSelect: _goTo,
                   ),
                   Expanded(
-                    child: GestureDetector(
-                      onHorizontalDragEnd: (details) {
-                        final v = details.primaryVelocity ?? 0;
-                        if (v < -250) {
-                          _goTo(_index + 1);
-                        } else if (v > 250) {
-                          _goTo(_index - 1);
-                        }
-                      },
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 450),
-                        switchInCurve: Curves.easeOutCubic,
-                        switchOutCurve: Curves.easeInCubic,
-                        transitionBuilder: (child, animation) {
-                          final offset = Tween<Offset>(
-                            begin: const Offset(0, 0.04),
-                            end: Offset.zero,
-                          ).animate(animation);
-                          return FadeTransition(
-                            opacity: animation,
-                            child: SlideTransition(
-                              position: offset,
-                              child: child,
+                    child: SingleChildScrollView(
+                      controller: _scroll,
+                      child: Column(
+                        children: [
+                          for (var i = 0; i < screens.length; i++)
+                            Container(
+                              key: _keys[i],
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 40,
+                              ),
+                              child: Center(
+                                child: ConstrainedBox(
+                                  constraints:
+                                      const BoxConstraints(maxWidth: 900),
+                                  child: screens[i],
+                                ),
+                              ),
                             ),
-                          );
-                        },
-                        child: SingleChildScrollView(
-                          key: ValueKey(_index),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 32,
-                          ),
-                          child: Center(
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 900),
-                              child: screens[_index],
-                            ),
-                          ),
-                        ),
+                        ],
                       ),
                     ),
                   ),
