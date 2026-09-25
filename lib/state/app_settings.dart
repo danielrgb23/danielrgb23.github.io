@@ -40,6 +40,17 @@ class AppSettings extends ChangeNotifier {
     }
   }
 
+  /// Changes several settings at once with a single rebuild.
+  void apply({bool? dark, AppLang? lang}) {
+    final nextDark = dark ?? isDark;
+    final nextLang = lang ?? this.lang;
+    if (nextDark == isDark && nextLang == this.lang) return;
+    isDark = nextDark;
+    this.lang = nextLang;
+    notifyListeners();
+    _save();
+  }
+
   void toggleTheme() {
     isDark = !isDark;
     notifyListeners();

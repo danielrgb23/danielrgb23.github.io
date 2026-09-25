@@ -42,6 +42,21 @@ class S {
   static String get bookTooltip =>
       tr('Folheie o livro: idioma', 'Flip the book: language');
 
+  // Wizard
+  static String get wizardName => tr('MAGO', 'WIZARD');
+  static String get wizardHint => tr(
+        'Que tal roubar o café ou o cajado do mago?',
+        "How about stealing the wizard's coffee or staff?",
+      );
+  static String get wizardCoffee => tr(
+        'Tire tudo de mim, menos meu café!',
+        'Take everything from me, but not my coffee!',
+      );
+  static String get wizardStaff => tr(
+        'Um mago não é dependente de suas ferramentas, ele que as cria.',
+        'A wizard is not dependent on his tools, he creates them.',
+      );
+
   // Hero
   static String get heroKicker =>
       tr('INSIRA A FICHA PARA CONTINUAR', 'INSERT COIN TO CONTINUE');
