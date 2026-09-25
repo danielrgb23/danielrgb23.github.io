@@ -6,6 +6,7 @@ import '../screens/missions_screen.dart';
 import '../screens/stages_screen.dart';
 import '../screens/status_screen.dart';
 import '../state/app_settings.dart';
+import '../state/game_state.dart';
 import '../state/strings.dart';
 import '../theme/app_theme.dart';
 import 'achievement_toast.dart';
@@ -273,17 +274,24 @@ class _Header extends StatelessWidget {
         border: Border(bottom: BorderSide(color: AppColors.border, width: 2)),
       ),
       // Right padding leaves room for the lamp + book overlay.
-      padding: const EdgeInsets.fromLTRB(20, 14, 200, 14),
+      padding: EdgeInsets.fromLTRB(20, 14, isCompact ? 165 : 200, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'D_R23>',
-                style:
-                    AppText.pixel.copyWith(fontSize: 12, color: AppColors.gold),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'D_R23>',
+                    style: AppText.pixel
+                        .copyWith(fontSize: 12, color: AppColors.gold),
+                  ),
+                  const SizedBox(width: 14),
+                  const _CoinCounter(),
+                ],
               ),
               if (!isCompact)
                 Row(
@@ -322,6 +330,57 @@ class _Header extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Arcade-style coin HUD: a little coin and "x00", which pops when it grows.
+class _CoinCounter extends StatelessWidget {
+  const _CoinCounter();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<int>(
+      valueListenable: GameState.coins,
+      builder: (context, coins, _) {
+        final label = 'x${coins.toString().padLeft(2, '0')}';
+        return Semantics(
+          label: '$coins coins',
+          child: ExcludeSemantics(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TweenAnimationBuilder<double>(
+                  key: ValueKey(coins),
+                  tween: Tween(begin: coins == 0 ? 1 : 1.6, end: 1),
+                  duration: const Duration(milliseconds: 350),
+                  curve: Curves.easeOutBack,
+                  builder: (context, scale, child) =>
+                      Transform.scale(scale: scale, child: child),
+                  child: Container(
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFFFFCD3C),
+                      border: Border.all(
+                        color: const Color(0xFFC98A00),
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: AppText.pixel
+                      .copyWith(fontSize: 10, color: AppColors.gold),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

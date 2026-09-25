@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../data/assets.dart';
+import '../state/game_state.dart';
 import '../state/strings.dart';
 import '../theme/app_theme.dart';
 import '../widgets/achievement_toast.dart';
+import '../widgets/coin_flip.dart';
 import '../widgets/pixel_wizard.dart';
 
 class HeroScreen extends StatefulWidget {
@@ -16,6 +18,7 @@ class HeroScreen extends StatefulWidget {
 class _HeroScreenState extends State<HeroScreen> with TickerProviderStateMixin {
   late final AnimationController _glowController;
   late final AnimationController _pulseController;
+  late final AnimationController _coinController;
   late final AnimationController _titleController;
   late final Animation<double> _titleOpacity;
 
@@ -33,6 +36,10 @@ class _HeroScreenState extends State<HeroScreen> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 2200),
     )..repeat(reverse: true);
+    _coinController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1300),
+    );
 
     _titleController = AnimationController(
       vsync: this,
@@ -63,11 +70,22 @@ class _HeroScreenState extends State<HeroScreen> with TickerProviderStateMixin {
   void dispose() {
     _glowController.dispose();
     _pulseController.dispose();
+    _coinController.dispose();
     _titleController.dispose();
     super.dispose();
   }
 
   void _handleAvatarTap() {
+    // Every click is a coin: spin (restarting if already spinning) and score.
+    _coinController.forward(from: 0);
+    final coins = ++GameState.coins.value;
+    if (coins == GameState.collectorGoal) {
+      AchievementToast.show(
+        context,
+        S.coinAchievement,
+        icon: Icons.monetization_on,
+      );
+    }
     final now = DateTime.now();
     if (_firstTap == null ||
         now.difference(_firstTap!) > const Duration(seconds: 2)) {
@@ -105,42 +123,54 @@ class _HeroScreenState extends State<HeroScreen> with TickerProviderStateMixin {
                   // Invisible twin keeps the avatar centered.
                   SizedBox(width: wizardW),
                   const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: _handleAvatarTap,
-                    child: AnimatedBuilder(
-                      animation: _glowController,
-                      builder: (context, child) {
-                        final glow = 0.3 + 0.25 * _glowController.value;
-                        // Own layer: the blurred glow repaints every frame.
-                        return RepaintBoundary(
-                          child: Container(
-                            width: 132,
-                            height: 132,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border:
-                                  Border.all(color: AppColors.gold, width: 3),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.bgPanel,
-                                  blurRadius: 0,
-                                  spreadRadius: 6,
+                  Tooltip(
+                    message: S.coinHint,
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        onTap: _handleAvatarTap,
+                        child: CoinFlip(
+                          animation: _coinController,
+                          size: 132,
+                          reduceMotion:
+                              MediaQuery.of(context).disableAnimations,
+                          front: AnimatedBuilder(
+                            animation: _glowController,
+                            builder: (context, child) {
+                              final glow = 0.3 + 0.25 * _glowController.value;
+                              // Own layer: the blurred glow repaints every frame.
+                              return RepaintBoundary(
+                                child: Container(
+                                  width: 132,
+                                  height: 132,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                        color: AppColors.gold, width: 3),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.bgPanel,
+                                        blurRadius: 0,
+                                        spreadRadius: 6,
+                                      ),
+                                      BoxShadow(
+                                        color: AppColors.gold.withOpacity(glow),
+                                        blurRadius: 32,
+                                        spreadRadius: 2,
+                                      ),
+                                    ],
+                                  ),
+                                  child: child,
                                 ),
-                                BoxShadow(
-                                  color: AppColors.gold.withOpacity(glow),
-                                  blurRadius: 32,
-                                  spreadRadius: 2,
-                                ),
-                              ],
+                              );
+                            },
+                            child: ClipOval(
+                              child: Image.asset(
+                                avatarAsset,
+                                fit: BoxFit.cover,
+                              ),
                             ),
-                            child: child,
                           ),
-                        );
-                      },
-                      child: ClipOval(
-                        child: Image.asset(
-                          avatarAsset,
-                          fit: BoxFit.cover,
                         ),
                       ),
                     ),

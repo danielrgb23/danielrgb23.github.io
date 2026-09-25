@@ -37,6 +37,13 @@ class S {
         'ACHIEVEMENT: Polyglot! Language changed.',
       );
 
+  static String get coinAchievement => tr(
+        'CONQUISTA: Colecionador! 10 moedas.',
+        'ACHIEVEMENT: Collector! 10 coins.',
+      );
+  static String get coinHint =>
+      tr('Clique pra ganhar uma moeda', 'Click to earn a coin');
+
   static String get lampTooltip => tr(
       'Puxe a cordinha: tema claro/escuro', 'Pull the chain: light/dark theme');
   static String get bookTooltip =>
