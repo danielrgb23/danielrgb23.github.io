@@ -50,8 +50,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     await tester.tapAt(spritePoint(tester, 20, 20));
-    // The line starts at 62% of the 7 s reaction, then gets typed out.
-    for (var i = 0; i < 75; i++) {
+    // The line starts at 72% of the 7 s reaction, then gets typed out.
+    for (var i = 0; i < 95; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
     expect(find.textContaining('ferramentas'), findsOneWidget);
@@ -60,5 +60,42 @@ void main() {
     expect(AppSettings.instance.lang, AppLang.pt);
 
     await tester.pump(const Duration(seconds: 8)); // speech box goes away
+  });
+
+  testWidgets('dragging the coffee away in any direction steals it',
+      (tester) async {
+    await pumpApp(tester);
+    await tester.pump(const Duration(milliseconds: 6000)); // cup in hand
+
+    final g = await tester.startGesture(spritePoint(tester, 2, 15));
+    await g.moveBy(const Offset(40, 90)); // down and to the right
+    await tester.pump(const Duration(milliseconds: 50));
+    await g.moveBy(const Offset(40, 90));
+    await tester.pump(const Duration(milliseconds: 50));
+    // Still holding: nothing has been triggered yet.
+    expect(AppSettings.instance.isDark, isTrue);
+    await g.up();
+    for (var i = 0; i < 80; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(AppSettings.instance.isDark, isFalse);
+    await tester.pump(const Duration(seconds: 8));
+  });
+
+  testWidgets('a short drag only wiggles the staff, it springs back',
+      (tester) async {
+    await pumpApp(tester);
+    await tester.pump(const Duration(milliseconds: 500));
+
+    final g = await tester.startGesture(spritePoint(tester, 20, 20));
+    await g.moveBy(const Offset(8, 0)); // ~2 sprite pixels
+    await tester.pump(const Duration(milliseconds: 50));
+    await g.up();
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    // No spell, no speech.
+    expect(find.textContaining('ferramentas'), findsNothing);
+    expect(AppSettings.instance.isDark, isTrue);
   });
 }

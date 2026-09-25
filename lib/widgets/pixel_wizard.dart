@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/material.dart';
 import '../state/app_settings.dart';
 import '../state/strings.dart';
@@ -27,7 +28,9 @@ class PixelWizard extends StatefulWidget {
   State<PixelWizard> createState() => _PixelWizardState();
 }
 
-enum _Mode { loop, coffee, staff }
+enum _Mode { loop, grab, coffee, staff }
+
+enum _Item { cup, staff }
 
 class _PixelWizardState extends State<PixelWizard>
     with TickerProviderStateMixin {
@@ -46,6 +49,20 @@ class _PixelWizardState extends State<PixelWizard>
     ..addStatusListener((s) {
       if (s == AnimationStatus.completed) _endReaction();
     });
+  // Springs a half-dragged item back to the wizard.
+  late final AnimationController _snap = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 500),
+  )
+    ..addListener(() {
+      setState(() {
+        _dragOff = _snapFrom *
+            (1 - Curves.elasticOut.transform(_snap.value)).clamp(-1.0, 1.0);
+      });
+    })
+    ..addStatusListener((s) {
+      if (s == AnimationStatus.completed) _endReaction();
+    });
   final _clock = Stopwatch()..start();
 
   _Mode _mode = _Mode.loop;
@@ -53,6 +70,11 @@ class _PixelWizardState extends State<PixelWizard>
   bool _fired = false;
   bool _spoke = false;
   bool _reduceMotion = false;
+
+  _Item? _dragItem; // item being dragged (grab) or flying away (reaction)
+  Offset _dragOff = Offset.zero; // sprite units, relative to its rest place
+  Offset _snapFrom = Offset.zero;
+  Offset _flyDir = const Offset(0, -1);
 
   @override
   void didChangeDependencies() {
@@ -72,24 +94,105 @@ class _PixelWizardState extends State<PixelWizard>
   void dispose() {
     _loop.dispose();
     _react.dispose();
+    _snap.dispose();
     super.dispose();
   }
 
-  void _start(_Mode mode) {
+  // Local pixel position -> sprite space.
+  Offset _toSprite(Offset p) => Offset(p.dx / widget.scale - 6, p.dy / widget.scale);
+
+  /// What is under the pointer, if it can be stolen.
+  _Item? _hit(Offset local) {
+    final p = _toSprite(local);
+    if (p.dx >= 16.5) return _Item.staff;
+    final cup = _cupAt(_loop.value);
+    if (cup.vis > 0.6 &&
+        Rect.fromLTWH(cup.pos.dx - 5, cup.pos.dy - 4, 14, 14).contains(p)) {
+      return _Item.cup;
+    }
+    return null;
+  }
+
+  void _freeze(_Mode mode) {
+    _frozenT = _loop.value;
+    _loop.stop();
+    _mode = mode;
+  }
+
+  void _onPanStart(DragStartDetails d) {
     if (_mode != _Mode.loop) return;
+    final item = _hit(d.localPosition);
+    if (item == null) return;
     setState(() {
-      _mode = mode;
-      _frozenT = _loop.value;
+      _freeze(_Mode.grab);
+      _dragItem = item;
+      _dragOff = Offset.zero;
+    });
+  }
+
+  void _onPanUpdate(DragUpdateDetails d) {
+    if (_mode != _Mode.grab) return;
+    setState(() => _dragOff += d.delta / widget.scale);
+  }
+
+  void _onPanEnd(DragEndDetails d) {
+    if (_mode != _Mode.grab) return;
+    final vel = d.velocity.pixelsPerSecond / widget.scale;
+    final far = _dragOff.distance >= 7;
+    if (far || vel.distance >= 40) {
+      // Let go while pulling: the item keeps going in that direction.
+      final dir = vel.distance > 25
+          ? vel / vel.distance
+          : (_dragOff.distance > 0 ? _dragOff / _dragOff.distance : _defaultDir(_dragItem!));
+      _steal(_dragItem!, dir);
+    } else {
+      _dropBack();
+    }
+  }
+
+  void _onPanCancel() {
+    if (_mode == _Mode.grab) _dropBack();
+  }
+
+  void _dropBack() {
+    _snapFrom = _dragOff;
+    _snap.forward(from: 0);
+  }
+
+  Offset _defaultDir(_Item item) => item == _Item.cup
+      ? const Offset(-0.8, -0.6)
+      : const Offset(0.6, -0.8);
+
+  void _onTapUp(TapUpDetails d) {
+    if (_mode != _Mode.loop) return;
+    final item = _hit(d.localPosition);
+    if (item == null) return;
+    setState(() {
+      _freeze(_Mode.loop); // sets frozen t; mode is set by _steal
+      _dragOff = Offset.zero;
+    });
+    _steal(item, _defaultDir(item));
+  }
+
+  void _steal(_Item item, Offset dir) {
+    setState(() {
+      if (_mode == _Mode.loop) _freeze(_Mode.loop);
+      _mode = item == _Item.cup ? _Mode.coffee : _Mode.staff;
+      _dragItem = item;
+      _flyDir = dir;
       _fired = false;
       _spoke = false;
     });
-    _loop.stop();
     _react.forward(from: 0);
   }
 
   void _endReaction() {
     if (!mounted) return;
-    setState(() => _mode = _Mode.loop);
+    setState(() {
+      _mode = _Mode.loop;
+      _dragItem = null;
+      _dragOff = Offset.zero;
+    });
     if (_reduceMotion) {
       _loop.value = 0.66;
     } else {
@@ -119,16 +222,6 @@ class _PixelWizardState extends State<PixelWizard>
     }
   }
 
-  void _onTapDown(TapDownDetails d) {
-    final s = widget.scale;
-    final x = d.localPosition.dx / s - 6; // sprite space
-    if (x >= 16) {
-      _start(_Mode.staff);
-    } else if (_cupAt(_loop.value).vis > 0.6) {
-      _start(_Mode.coffee);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final s = widget.scale;
@@ -138,22 +231,34 @@ class _PixelWizardState extends State<PixelWizard>
       child: Tooltip(
         message: S.wizardHint,
         child: MouseRegion(
-          cursor: SystemMouseCursors.click,
+          cursor: _mode == _Mode.grab
+              ? SystemMouseCursors.grabbing
+              : SystemMouseCursors.grab,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTapDown: _onTapDown,
+            // Report where the finger went down, not where the slop ended.
+            dragStartBehavior: DragStartBehavior.down,
+            onTapUp: _onTapUp,
+            onPanStart: _onPanStart,
+            onPanUpdate: _onPanUpdate,
+            onPanEnd: _onPanEnd,
+            onPanCancel: _onPanCancel,
             child: SizedBox(
               width: PixelWizard.gridW * s,
               height: PixelWizard.gridH * s,
               child: AnimatedBuilder(
                 animation: Listenable.merge([_loop, _react]),
                 builder: (context, _) => CustomPaint(
+                  // Items can be dragged/fly well outside the sprite box.
                   painter: _WizardPainter(
                     t: _mode == _Mode.loop ? _loop.value : _frozenT,
                     seconds: _clock.elapsedMilliseconds / 1000,
                     scale: s,
                     mode: _mode,
                     rt: _react.value,
+                    item: _dragItem,
+                    dragOff: _dragOff,
+                    flyDir: _flyDir,
                   ),
                 ),
               ),
@@ -166,21 +271,33 @@ class _PixelWizardState extends State<PixelWizard>
 }
 
 // --- palette (fixed: pixel art looks the same in both themes) ---------------
-const _hat = Color(0xFF5B3FD1);
-const _hatDark = Color(0xFF3B2A8F);
-const _gold = Color(0xFFFFCD3C);
-const _skin = Color(0xFFF2C49B);
-const _angrySkin = Color(0xFFE0524A);
-const _beard = Color(0xFFEDEDED);
-const _beardShade = Color(0xFFBDB6D0);
 const _ink = Color(0xFF1B0B3A);
+const _hat = Color(0xFF5B3FD1);
+const _hatLight = Color(0xFF7D62F2);
+const _hatDark = Color(0xFF3B2A8F);
+const _robe = Color(0xFF4B34C0);
+const _robeLight = Color(0xFF6A4FE0);
+const _robeDark = Color(0xFF33238C);
+const _gold = Color(0xFFFFCD3C);
+const _goldLight = Color(0xFFFFEE9A);
+const _goldDark = Color(0xFFC9962B);
+const _skin = Color(0xFFF2C49B);
+const _skinShade = Color(0xFFD9A57C);
+const _nose = Color(0xFFE39A78);
+const _angrySkin = Color(0xFFE0524A);
+const _beard = Color(0xFFF1EEF8);
+const _beardShade = Color(0xFFB9B3D0);
 const _wood = Color(0xFF8B5A2B);
 const _woodLight = Color(0xFFB57C3E);
+const _woodDark = Color(0xFF5E3A18);
 const _orb = Color(0xFF2DE2FF);
+const _orbDark = Color(0xFF16A6C4);
 const _rage = Color(0xFFFF3CAA);
-const _boots = Color(0xFF2A1A55);
-const _cupWhite = Color(0xFFF7F1E5);
-const _cupShade = Color(0xFFCFC3AE);
+const _boot = Color(0xFF5A3A2A);
+const _bootLight = Color(0xFF7D5540);
+const _mugOutline = Color(0xFF3B2314);
+const _mugWhite = Color(0xFFF7F1E5);
+const _mugShade = Color(0xFFCFC3AE);
 const _coffee = Color(0xFF6B3A1E);
 const _steam = Color(0xFFE9E2F7);
 
@@ -204,7 +321,7 @@ Offset _round(Offset o) => Offset(o.dx.roundToDouble(), o.dy.roundToDouble());
 /// Everything about the coffee cup at loop time [t].
 class _Cup {
   const _Cup(this.pos, this.vis, this.sipping);
-  final Offset pos; // top-left, sprite space
+  final Offset pos; // top-left of the mug body, sprite space
   final double vis; // 0..1: how much of it has materialized
   final bool sipping;
 }
@@ -244,7 +361,7 @@ _Cup _cupAt(double t) {
 
 /// Position of the left hand (the one that reaches for the cup).
 Offset _handAt(double t, _Cup cup, double seconds) {
-  final cupHand = Offset(cup.pos.dx + 1, cup.pos.dy + 5);
+  final cupHand = Offset(cup.pos.dx + 1, cup.pos.dy + 6);
   final holding = t >= _catchEnd - 0.04 && t < _lowerEnd + 0.03;
   Offset hand;
   if (t < _summonStart) {
@@ -266,6 +383,68 @@ Offset _handAt(double t, _Cup cup, double seconds) {
   return _round(hand);
 }
 
+// Mug sprite, 8x8. Handle on the left, body (cols 2..7) faces the wizard.
+// o outline, w cream, s shade, c coffee, h handle.
+const _mug = [
+  '..oooooo',
+  '..occcco',
+  '.oowwwso',
+  'ohowwwso',
+  'ohowwwso',
+  '.oowwsso',
+  '...osso.',
+  '....oo..',
+];
+const _mugColors = {
+  'o': _mugOutline,
+  'w': _mugWhite,
+  's': _mugShade,
+  'c': _coffee,
+  'h': _mugShade,
+};
+
+/// A tiny pixel buffer for the wizard's body: layers are painted into it
+/// and an outline is derived from the silhouette, which is what gives the
+/// sprite its clean pixel-art edge.
+class _Buf {
+  static const w = 22, h = 38; // sprite x -1..20, y -1..36
+  final cells = List<Color?>.filled(w * h, null);
+
+  void set(int x, int y, Color c) {
+    final gx = x + 1, gy = y + 1;
+    if (gx < 0 || gx >= w || gy < 0 || gy >= h) return;
+    cells[gy * w + gx] = c;
+  }
+
+  void rect(int x, int y, int rw, int rh, Color c) {
+    for (var j = 0; j < rh; j++) {
+      for (var i = 0; i < rw; i++) {
+        set(x + i, y + j, c);
+      }
+    }
+  }
+
+  void outline(Color c) {
+    final out = List<Color?>.of(cells);
+    for (var y = 0; y < h; y++) {
+      for (var x = 0; x < w; x++) {
+        if (cells[y * w + x] != null) continue;
+        bool filled(int dx, int dy) {
+          final nx = x + dx, ny = y + dy;
+          return nx >= 0 && nx < w && ny >= 0 && ny < h && cells[ny * w + nx] != null;
+        }
+
+        if (filled(1, 0) || filled(-1, 0) || filled(0, 1) || filled(0, -1)) {
+          out[y * w + x] = c;
+        }
+      }
+    }
+    for (var i = 0; i < cells.length; i++) {
+      cells[i] = out[i];
+    }
+  }
+}
+
 class _WizardPainter extends CustomPainter {
   _WizardPainter({
     required this.t,
@@ -273,23 +452,30 @@ class _WizardPainter extends CustomPainter {
     required this.scale,
     required this.mode,
     required this.rt,
+    required this.item,
+    required this.dragOff,
+    required this.flyDir,
   });
-  final double t; // position in the idle loop (frozen during a reaction)
+  final double t; // position in the idle loop (frozen outside of it)
   final double seconds; // free-running clock, for steam/pulses
   final double scale;
   final _Mode mode;
   final double rt; // 0..1 progress of the current reaction
+  final _Item? item; // item being dragged / flying away
+  final Offset dragOff; // sprite units
+  final Offset flyDir; // unit vector
 
   // Reaction beats, as fractions of the reaction.
   static const coffeeSpellAt = 0.42;
-  static const staffSpeakAt = 0.62;
+  static const staffSpeakAt = 0.72;
 
   late Canvas _c;
   final _paint = Paint()..isAntiAlias = false;
+  double _alpha = 1; // multiplies every pixel drawn (fading items)
 
   // Draws one rect in sprite space (pixel grid units).
   void _px(num x, num y, Color color, {num w = 1, num h = 1, double a = 1}) {
-    _paint.color = color.withOpacity(a.clamp(0.0, 1.0));
+    _paint.color = color.withOpacity((a * _alpha).clamp(0.0, 1.0));
     _c.drawRect(
       Rect.fromLTWH(x.floorToDouble() * scale, y.floorToDouble() * scale,
           w * scale, h * scale),
@@ -298,12 +484,13 @@ class _WizardPainter extends CustomPainter {
   }
 
   // Pixel-perfect thick line (Bresenham), used for the arms.
-  void _line(int x0, int y0, int x1, int y1, Color color, {int thick = 2}) {
+  void _line(int x0, int y0, int x1, int y1, Color color,
+      {int thick = 2, int shift = 0}) {
     final dx = (x1 - x0).abs(), dy = -(y1 - y0).abs();
     final sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
     var err = dx + dy;
     while (true) {
-      _px(x0, y0, color, w: thick, h: thick);
+      _px(x0 + shift, y0 + shift, color, w: thick, h: thick);
       if (x0 == x1 && y0 == y1) break;
       final e2 = 2 * err;
       if (e2 >= dy) {
@@ -317,29 +504,51 @@ class _WizardPainter extends CustomPainter {
     }
   }
 
+  void _limb(int x0, int y0, int x1, int y1) {
+    _line(x0, y0, x1, y1, _ink, thick: 4, shift: -1); // outline underlay
+    _line(x0, y0, x1, y1, _robe);
+    _line(x0, y0, x1, y1, _robeLight, thick: 1);
+  }
+
+  void _hand(num x, num y) {
+    _px(x - 1, y - 1, _ink, w: 5, h: 4);
+    _px(x, y, _skin, w: 3, h: 2);
+    _px(x, y + 1, _skinShade, w: 3);
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     _c = canvas;
     canvas.translate(6 * scale, 0); // sprite x=0 sits 6 pixels from the left
 
+    final grab = mode == _Mode.grab;
     final coffee = mode == _Mode.coffee;
     final staff = mode == _Mode.staff;
     final cup = _cupAt(t);
-    final hand = _handAt(t, cup, seconds);
+    var hand = _handAt(t, cup, seconds);
 
     // ---- reaction state -------------------------------------------------
     var bodyDx = 0.0, bodyDy = 0.0;
     var angry = 0.0;
-    var wideEyes = false;
-    var exclaim = false, question = false;
-    var cupFly = 0.0; // 0 = in hand, 1 = gone
-    var staffFly = 0.0;
-    var staffVis = 1.0; // fraction of the staff that exists
+    var wideEyes = grab;
+    var exclaim = grab && (seconds * 5).floor().isEven;
+    var question = false;
     var rightHandY = 21.0;
     var flash = 0.0;
+    var beam = 0.0;
+    // Where each item is, relative to its rest place.
+    var cupOff = Offset.zero, cupAlpha = 1.0;
+    var staffOff = Offset.zero, staffAlpha = 1.0, staffShown = true;
 
-    if (coffee) {
-      cupFly = _seg(rt, 0, 0.10);
+    Offset flown(double k) => dragOff + flyDir * (110 * Curves.easeIn.transform(k));
+
+    if (grab) {
+      if (item == _Item.cup) cupOff = dragOff;
+      if (item == _Item.staff) staffOff = dragOff;
+    } else if (coffee) {
+      final k = _seg(rt, 0, 0.12);
+      cupOff = flown(k);
+      cupAlpha = 1 - k * k;
       final bump = _seg(rt, 0.10, 0.20);
       if (bump > 0 && bump < 1) bodyDy = -2 * sin(bump * pi);
       wideEyes = rt >= 0.10 && rt < 0.26;
@@ -352,33 +561,57 @@ class _WizardPainter extends CustomPainter {
       if (rt >= coffeeSpellAt - 0.06 && rt < 0.62) rightHandY = 17;
       flash = (rt >= coffeeSpellAt - 0.04 && rt < coffeeSpellAt + 0.08) ? 1 : 0;
     } else if (staff) {
-      // Only the old staff flies away; the conjured one appears in place.
-      staffFly = rt < 0.12 ? _seg(rt, 0, 0.12) : 0;
-      staffVis = rt < 0.12 ? 1 : (rt < 0.45 ? 0 : _seg(rt, 0.45, 0.66));
-      question = rt >= 0.12 && rt < 0.42 && (seconds * 5).floor().isEven;
+      // 1. the old staff is yanked away, 2. he looks puzzled, 3. he raises his
+      // hand, 4. a new staff falls from the sky into it, 5. he lowers it.
+      // The coffee is conjured magic: once the staff is gone it pops out of
+      // existence ("plink") and his empty hand drops.
+      if (cup.vis > 0) {
+        cupAlpha = rt < 0.05 ? 1 : 0;
+        hand = _round(_lerpO(hand, _restHand,
+            Curves.easeInOut.transform(_seg(rt, 0.10, 0.28))));
+      }
+      if (rt < 0.12) {
+        final k = _seg(rt, 0, 0.12);
+        staffOff = flown(k);
+        staffAlpha = 1 - k * k;
+      } else if (rt < 0.46) {
+        staffShown = false;
+      } else {
+        final fall = Curves.easeIn.transform(_seg(rt, 0.46, 0.60));
+        final lower = Curves.easeInOut.transform(_seg(rt, 0.64, 0.74));
+        staffOff = Offset(0, _lerp(-46, -11, fall) + 11 * lower);
+      }
       wideEyes = rt >= 0.02 && rt < 0.14;
-      if (rt >= 0.30 && rt < 0.72) rightHandY = 16;
-      flash = (rt >= 0.62 && rt < 0.74) ? 1 : 0;
+      question = rt >= 0.12 && rt < 0.34 && (seconds * 5).floor().isEven;
+      if (rt >= 0.30 && rt < 0.46) {
+        rightHandY = _lerp(21, 10, Curves.easeOut.transform(_seg(rt, 0.30, 0.46)));
+      } else if (rt >= 0.46 && rt < 0.64) {
+        rightHandY = 10;
+      } else if (rt >= 0.64 && rt < 0.74) {
+        rightHandY = _lerp(10, 21, Curves.easeInOut.transform(_seg(rt, 0.64, 0.74)));
+      }
+      beam = _seg(rt, 0.34, 0.46) * (1 - _seg(rt, 0.62, 0.74));
+      flash = (rt >= 0.58 && rt < 0.68) ? 1 : 0;
     }
 
     canvas.save();
     canvas.translate(bodyDx * scale, bodyDy * scale);
 
-    // ---- orb + staff glow ---------------------------------------------
+    // ---- sky beam (behind everything) ------------------------------------
+    if (beam > 0) _drawBeam(beam);
+
+    // ---- staff ---------------------------------------------------------
     final summoning = mode == _Mode.loop && t >= _summonStart && t < _summonEnd;
     final fading = mode == _Mode.loop && t >= _lowerEnd && t < _fadeEnd;
     final pulse = 0.5 + 0.5 * sin(seconds * 3);
     final orbColor = Color.lerp(_orb, _rage, angry)!;
     final orbFlash = (summoning || fading) ? 1.0 : flash;
-    final staffAlpha = staff ? (1 - staffFly) : 1.0;
-    final staffOff = staff
-        ? Offset(7 * Curves.easeIn.transform(staffFly),
-            -34 * Curves.easeIn.transform(staffFly))
-        : Offset.zero;
-    final orbVisible = !staff || staffVis > 0.9 || rt < 0.12;
-    if (orbVisible) {
+    if (staffShown) {
+      canvas.save();
+      canvas.translate(staffOff.dx * scale, staffOff.dy * scale);
+      _alpha = staffAlpha;
       canvas.drawCircle(
-        Offset((20 + staffOff.dx) * scale, (3 + staffOff.dy) * scale),
+        Offset(20 * scale, 3 * scale),
         (5 + 3 * pulse + 4 * orbFlash + 3 * angry) * scale,
         Paint()
           ..color = orbColor.withOpacity(
@@ -387,123 +620,233 @@ class _WizardPainter extends CustomPainter {
           )
           ..maskFilter = MaskFilter.blur(BlurStyle.normal, scale * 3),
       );
+      _drawStaff(orbColor);
+      _alpha = 1;
+      canvas.restore();
     }
 
-    // ---- staff ---------------------------------------------------------
-    if (staffVis > 0) {
-      final sx = staffOff.dx, sy = staffOff.dy;
-      // While conjuring, the shaft grows upward from the ground.
-      final grown = staff && rt >= 0.45 && staffVis < 1;
-      final shaftH = grown ? (29 * staffVis).round() : 29;
-      final shaftTop = 34 - shaftH;
-      _px(19 + sx, shaftTop + sy, _wood, w: 2, h: shaftH, a: staffAlpha);
-      _px(19 + sx, shaftTop + sy, _woodLight, w: 1, h: shaftH, a: staffAlpha);
-      if (orbVisible) {
-        _px(18 + sx, 1 + sy, orbColor, w: 4, h: 4, a: staffAlpha);
-        _px(18 + sx, 1 + sy, Colors.white, a: 0.9 * staffAlpha);
-        _px(17 + sx, 5 + sy, _wood, a: staffAlpha);
-        _px(22 + sx, 5 + sy, _wood, a: staffAlpha);
-      }
-    }
+    // ---- body (hat, face, beard, robe, boots) with auto outline ---------
+    _drawBody(
+      angry: angry,
+      wideEyes: wideEyes,
+      sipping: mode == _Mode.loop && cup.sipping,
+      gulp: mode == _Mode.loop &&
+          cup.sipping &&
+          sin(_seg(t, _liftEnd, _sipEnd) * pi * 6) > 0.35,
+    );
 
-    // ---- robe ----------------------------------------------------------
-    for (var y = 16; y <= 31; y++) {
-      final grow = ((y - 16) * 4) ~/ 15;
-      final l = 5 - grow, r = 14 + grow;
-      _px(l, y, _hat, w: r - l + 1);
-      _px(r - 1, y, _hatDark, w: 2); // shaded right side
-    }
-    _px(4, 31, _hatDark, w: 14); // hem
-    _px(5, 22, _gold, w: 10); // belt
-    _px(9, 22, _ink, w: 2);
-    _px(3, 32, _boots, w: 5, h: 2);
-    _px(12, 32, _boots, w: 5, h: 2);
-
-    // ---- right arm (staff hand) -----------------------------------------
-    _line(14, 18, 18, rightHandY.toInt(), _hat);
-    _px(18, rightHandY, _skin, w: 3, h: 2);
-
-    // ---- hat -----------------------------------------------------------
-    for (var y = 0; y <= 9; y++) {
-      final half = y ~/ 2 + 1;
-      _px(9 - half + 1, y, _hat, w: half * 2);
-      _px(9 + half - 1, y, _hatDark);
-    }
-    _px(5, 10, _gold, w: 10); // band
-    _px(8, 5, _gold, w: 2, h: 2); // star
-    _px(2, 11, _hatDark, w: 16); // brim
-    _px(3, 11, _hat, w: 13);
-
-    // ---- face + beard --------------------------------------------------
-    final skin = Color.lerp(_skin, _angrySkin, angry)!;
-    _px(5, 12, skin, w: 10, h: 3);
-    final sipping = mode == _Mode.loop && cup.sipping;
-    if (wideEyes) {
-      _px(6, 12, Colors.white, w: 2, h: 2);
-      _px(11, 12, Colors.white, w: 2, h: 2);
-      _px(7, 13, _ink);
-      _px(11, 13, _ink);
-    } else if (angry > 0.4) {
-      _px(7, 13, _ink);
-      _px(11, 13, _ink);
-      _px(6, 12, _ink, w: 2); // slanted brows
-      _px(8, 13, _ink);
-      _px(12, 12, _ink);
-      _px(11, 12, _ink);
-      _px(10, 13, _ink);
-    } else if (sipping) {
-      _px(7, 14, _ink); // eyes closed while sipping
-      _px(11, 14, _ink);
-    } else {
-      _px(7, 13, _ink);
-      _px(11, 13, _ink);
-    }
-    final gulp = sipping && sin(_seg(t, _liftEnd, _sipEnd) * pi * 6) > 0.35;
-    final b = gulp ? 1 : 0;
-    _px(5, 15 + b, _beard, w: 10, h: 2);
-    _px(6, 17 + b, _beard, w: 8, h: 2);
-    _px(7, 19 + b, _beard, w: 6, h: 2);
-    _px(8, 21 + b, _beard, w: 4);
-    _px(13, 15 + b, _beardShade, h: 4);
-    _px(5, 14, _beard, w: 2);
-    _px(13, 14, _beard, w: 2);
-    _px(9, 14, skin, w: 2); // nose
-
-    // ---- left arm (reaches for the cup) --------------------------------
-    _line(5, 18, hand.dx.toInt(), hand.dy.toInt(), _hat);
-    _px(hand.dx, hand.dy, _skin, w: 3, h: 2);
+    // ---- arms ----------------------------------------------------------
+    _limb(14, 18, 18, rightHandY.toInt());
+    _hand(18, rightHandY);
+    _limb(5, 18, hand.dx.toInt(), hand.dy.toInt());
+    _hand(hand.dx, hand.dy);
 
     // ---- emotes -----------------------------------------------------------
     if (exclaim) {
-      _px(14, 0, _gold, w: 2, h: 4);
-      _px(14, 5, _gold, w: 2, h: 2);
+      _px(14, -1, _gold, w: 2, h: 4);
+      _px(14, 4, _gold, w: 2, h: 2);
     }
     if (question) {
-      _px(14, 0, _gold, w: 3);
-      _px(16, 1, _gold, h: 2);
-      _px(15, 3, _gold, w: 2);
-      _px(14, 4, _gold);
-      _px(14, 6, _gold);
+      _px(14, -1, _gold, w: 3);
+      _px(16, 0, _gold, h: 2);
+      _px(15, 2, _gold, w: 2);
+      _px(14, 3, _gold);
+      _px(14, 5, _gold);
     }
 
     // ---- effects ---------------------------------------------------------
     if (summoning) _summonSparkles();
-    if (coffee) _coffeeEffects(cup, cupFly, angry);
-    if (staff) _staffEffects();
+    if (coffee) _coffeeEffects(cup, angry);
+    if (staff) _staffEffects(cup);
 
-    // ---- cup (idle loop) -----------------------------------------------
-    if (!coffee || cupFly < 1) {
-      final fly = Curves.easeIn.transform(cupFly);
-      final pos = cup.pos + Offset(-26 * fly, -20 * fly);
-      if (cup.vis > 0) {
-        _drawCup(_round(pos), cup.vis, sipping, alpha: 1 - cupFly);
-      }
+    // ---- cup -----------------------------------------------------------
+    if (cup.vis > 0 && cupAlpha > 0.02) {
+      _alpha = cupAlpha;
+      _drawCup(_round(cup.pos + cupOff), cup.vis, mode == _Mode.loop && cup.sipping);
+      _alpha = 1;
     }
-    if (fading || (mode == _Mode.loop && t > _summonEnd - 0.05 && t < _summonEnd + 0.03)) {
-      _burst(cup.pos + const Offset(2, 2), (t - _lowerEnd) * 20);
+    if (fading ||
+        (mode == _Mode.loop && t > _summonEnd - 0.05 && t < _summonEnd + 0.03)) {
+      _burst(cup.pos + const Offset(3, 3), (t - _lowerEnd) * 20);
     }
 
     canvas.restore();
+  }
+
+  void _drawBody({
+    required double angry,
+    required bool wideEyes,
+    required bool sipping,
+    required bool gulp,
+  }) {
+    final b = _Buf();
+    final skin = Color.lerp(_skin, _angrySkin, angry)!;
+    final skinShade = Color.lerp(_skinShade, const Color(0xFFB83A34), angry)!;
+
+    // Robe.
+    for (var y = 16; y <= 31; y++) {
+      final grow = ((y - 16) * 4) ~/ 15;
+      final l = 5 - grow, r = 14 + grow;
+      b.rect(l, y, r - l + 1, 1, _robe);
+      b.set(l, y, _robeLight);
+      b.set(r, y, _robeDark);
+      b.set(r - 1, y, _robeDark);
+      if (y >= 24) {
+        b.set(7, y, _robeDark); // folds
+        b.set(12, y, _robeDark);
+      }
+    }
+    for (var x = 1; x <= 18; x++) {
+      b.set(x, 30, x.isEven ? _goldDark : _robeDark);
+      b.set(x, 31, x.isEven ? _gold : _goldDark); // gold hem trim
+    }
+    b.rect(4, 22, 12, 1, _gold); // belt
+    b.rect(9, 22, 2, 2, _goldLight);
+    b.set(9, 22, _goldDark);
+    for (final s in const [(4, 27), (15, 26), (8, 29), (13, 28)]) {
+      b.set(s.$1, s.$2, _gold); // little stars on the robe
+    }
+    b.set(4, 26, _goldLight);
+    b.set(4, 28, _goldLight);
+
+    // Boots.
+    b.rect(3, 32, 6, 2, _boot);
+    b.rect(11, 32, 6, 2, _boot);
+    b.rect(2, 33, 1, 1, _boot);
+    b.rect(3, 32, 6, 1, _bootLight);
+    b.rect(11, 32, 6, 1, _bootLight);
+
+    // Hat: a pointy cone that leans right at the tip.
+    for (var y = 0; y <= 9; y++) {
+      final half = y ~/ 2 + 1;
+      final lean = ((9 - y) * 0.18).round();
+      final l = 10 - half + lean, r = 9 + half + lean;
+      b.rect(l, y, r - l + 1, 1, _hat);
+      b.set(l, y, _hatLight);
+      if (r - l > 2) b.set(l + 1, y, _hatLight);
+      b.set(r, y, _hatDark);
+      if (r - l > 3) b.set(r - 1, y, _hatDark);
+    }
+    b.set(12, 0, _hat); // floppy tip bending over
+    b.set(13, 1, _hat);
+    b.rect(4, 10, 12, 1, _gold); // band
+    b.rect(9, 10, 2, 1, _goldLight);
+    b.rect(5, 10, 1, 1, _goldDark);
+    // star on the hat
+    b.set(9, 5, _gold);
+    b.rect(8, 6, 3, 1, _gold);
+    b.set(9, 7, _gold);
+    b.rect(1, 11, 18, 1, _hat); // brim
+    b.rect(1, 11, 3, 1, _hatLight);
+    b.rect(2, 12, 16, 1, _hatDark);
+
+    // Face.
+    b.rect(5, 13, 10, 3, skin);
+    b.rect(5, 13, 10, 1, skinShade); // shadow under the brim
+    b.set(4, 14, skin); // ears
+    b.set(4, 15, skin);
+    b.set(15, 14, skin);
+    b.set(15, 15, skin);
+    b.rect(9, 14, 2, 1, Color.lerp(_nose, _angrySkin, angry)!);
+
+    // Beard (bobs down a pixel on each gulp).
+    final bob = gulp ? 1 : 0;
+    void beardRow(int y, int l, int r) {
+      b.rect(l, y + (y > 15 ? bob : 0), r - l + 1, 1, _beard);
+      b.set(r, y + (y > 15 ? bob : 0), _beardShade);
+    }
+
+    beardRow(15, 5, 14);
+    beardRow(16, 5, 14);
+    beardRow(17, 6, 13);
+    beardRow(18, 6, 13);
+    beardRow(19, 7, 12);
+    beardRow(20, 7, 12);
+    beardRow(21, 8, 11);
+    beardRow(22, 8, 11);
+    beardRow(23, 9, 10);
+    b.rect(6, 15, 8, 1, _beard); // mustache
+    b.set(9, 15, _beardShade);
+    b.set(10, 15, _beardShade);
+    b.set(9, 18 + bob, _beardShade); // strands
+    b.set(10, 20 + bob, _beardShade);
+
+    // Eyes and eyebrows.
+    if (wideEyes) {
+      b.rect(6, 13, 2, 2, Colors.white);
+      b.rect(12, 13, 2, 2, Colors.white);
+      b.set(7, 14, _ink);
+      b.set(12, 14, _ink);
+    } else if (angry > 0.4) {
+      b.set(7, 14, _ink);
+      b.set(12, 14, _ink);
+      b.rect(6, 13, 2, 1, _ink); // slanted brows
+      b.set(8, 14, _ink);
+      b.rect(12, 13, 2, 1, _ink);
+      b.set(11, 14, _ink);
+    } else if (sipping) {
+      b.rect(6, 14, 2, 1, _ink); // eyes closed
+      b.rect(12, 14, 2, 1, _ink);
+    } else {
+      b.set(7, 14, _ink);
+      b.set(12, 14, _ink);
+      b.rect(6, 13, 3, 1, _beard); // bushy brows
+      b.rect(11, 13, 3, 1, _beard);
+    }
+
+    b.outline(_ink);
+
+    // Paint: merge horizontal runs of the same color into single rects.
+    for (var y = 0; y < _Buf.h; y++) {
+      var x = 0;
+      while (x < _Buf.w) {
+        final c = b.cells[y * _Buf.w + x];
+        if (c == null) {
+          x++;
+          continue;
+        }
+        var run = 1;
+        while (x + run < _Buf.w && b.cells[y * _Buf.w + x + run] == c) {
+          run++;
+        }
+        _px(x - 1, y - 1, c, w: run);
+        x += run;
+      }
+    }
+  }
+
+  void _drawStaff(Color orbColor) {
+    // Shaft with outline, highlight and knots.
+    _px(18, 4, _ink, w: 4, h: 31);
+    _px(19, 5, _wood, w: 2, h: 29);
+    _px(19, 5, _woodLight, w: 1, h: 29);
+    for (final y in const [11, 19, 27]) {
+      _px(19, y, _woodDark, w: 2);
+    }
+    // Claw holding the orb.
+    _px(16, 3, _ink, w: 8, h: 4);
+    _px(17, 4, _wood, w: 1, h: 2);
+    _px(22, 4, _wood, w: 1, h: 2);
+    _px(18, 5, _wood, w: 4, h: 1);
+    // Orb.
+    _px(17, 0, _ink, w: 6, h: 6);
+    _px(18, 1, orbColor, w: 4, h: 4);
+    _px(18, 4, Color.lerp(_orbDark, _rage, 0.5)!, w: 4, h: 1);
+    _px(18, 1, Colors.white, a: 0.95);
+    _px(19, 1, Colors.white, a: 0.5);
+  }
+
+  void _drawBeam(double a) {
+    // A column of light dropping from the sky onto his raised hand.
+    final flicker = 0.85 + 0.15 * sin(seconds * 25);
+    _px(15, -50, _orb, w: 10, h: 62, a: 0.10 * a * flicker);
+    _px(17, -50, _orb, w: 6, h: 62, a: 0.16 * a * flicker);
+    _px(19, -50, Colors.white, w: 2, h: 62, a: 0.30 * a * flicker);
+    // Motes of light sliding down the beam.
+    for (var i = 0; i < 8; i++) {
+      final y = -48 + ((seconds * 40 + i * 9) % 60);
+      _px(16 + (i * 5) % 8, y, i.isEven ? _gold : Colors.white, a: a * 0.9);
+    }
   }
 
   void _summonSparkles() {
@@ -522,13 +865,13 @@ class _WizardPainter extends CustomPainter {
     }
   }
 
-  void _coffeeEffects(_Cup cup, double cupFly, double angry) {
+  void _coffeeEffects(_Cup cup, double angry) {
     // Little smoke puff where the cup was snatched from.
-    if (rt > 0.06 && rt < 0.22) {
-      final k = _seg(rt, 0.06, 0.22);
+    if (rt > 0.02 && rt < 0.22) {
+      final k = _seg(rt, 0.02, 0.22);
       for (var i = 0; i < 6; i++) {
         final a = i * pi / 3 + 0.4;
-        _px(cup.pos.dx + 2 + cos(a) * (2 + 5 * k), cup.pos.dy + 2 + sin(a) * (2 + 5 * k),
+        _px(cup.pos.dx + 3 + cos(a) * (2 + 5 * k), cup.pos.dy + 3 + sin(a) * (2 + 5 * k),
             _steam, a: 1 - k);
       }
     }
@@ -543,64 +886,68 @@ class _WizardPainter extends CustomPainter {
       }
     }
     if (rt >= coffeeSpellAt - 0.02 && rt < coffeeSpellAt + 0.12) {
-      _burst(const Offset(20, 3), _seg(rt, coffeeSpellAt - 0.02, coffeeSpellAt + 0.12), radius: 12);
+      _burst(const Offset(20, 3), _seg(rt, coffeeSpellAt - 0.02, coffeeSpellAt + 0.12),
+          radius: 12);
     }
   }
 
-  void _staffEffects() {
-    // Whoosh trail while the staff is taken away.
+  void _staffEffects(_Cup cup) {
+    // "Plink": the cup vanishes in a twinkle and a ring of sparkles.
+    if (cup.vis > 0 && rt >= 0.05 && rt < 0.24) {
+      final k = _seg(rt, 0.05, 0.24);
+      final c = cup.pos + const Offset(3, 3);
+      final arm = (3 * (1 - k)).round();
+      if (arm > 0) {
+        _px(c.dx - arm, c.dy, Colors.white, w: arm * 2 + 1);
+        _px(c.dx, c.dy - arm, Colors.white, h: arm * 2 + 1);
+      }
+      _px(c.dx, c.dy, _goldLight);
+      _burst(c, k, radius: 7);
+    }
+    // Whoosh trail while the staff is yanked away.
     if (rt < 0.14) {
       final k = _seg(rt, 0, 0.14);
       for (var i = 1; i <= 4; i++) {
         final kk = (k - i * 0.05).clamp(0.0, 1.0);
-        final e = Curves.easeIn.transform(kk);
-        _px(19 + 7 * e, 12 - 34 * e + 8, _orb, a: (1 - i / 5) * (1 - k));
+        final p = dragOff + flyDir * (110 * Curves.easeIn.transform(kk));
+        _px(20 + p.dx, 10 + p.dy, _orb, a: (1 - i / 5) * (1 - k));
       }
     }
-    // Sparkles spiral in around the empty hand, then the new staff appears.
-    if (rt >= 0.30 && rt < 0.66) {
-      final k = _seg(rt, 0.30, 0.66);
-      for (var i = 0; i < 10; i++) {
-        final a = seconds * 6 + i * pi / 5;
-        final r = 9 * (1 - k) + 1;
-        _px(19.5 + cos(a) * r, 24 + sin(a) * r * 1.3, i.isEven ? _gold : _orb);
+    // Crackling light gathering around the raised hand.
+    if (rt >= 0.32 && rt < 0.5) {
+      final k = _seg(rt, 0.32, 0.5);
+      for (var i = 0; i < 8; i++) {
+        final a = seconds * 7 + i * pi / 4;
+        final r = 8 * (1 - k) + 2;
+        _px(19.5 + cos(a) * r, 11 + sin(a) * r, i.isEven ? _gold : _orb);
       }
     }
-    if (rt >= 0.62 && rt < 0.76) {
-      _burst(const Offset(20, 3), _seg(rt, 0.62, 0.76), radius: 10);
+    // Impact when the staff lands in his hand.
+    if (rt >= 0.58 && rt < 0.72) {
+      _burst(const Offset(19, 10), _seg(rt, 0.58, 0.72), radius: 10);
     }
   }
 
-  void _drawCup(Offset p, double vis, bool sipping, {double alpha = 1}) {
-    final x = p.dx, y = p.dy;
-    // Materialize bottom-to-top (rows revealed by `vis`).
-    final rows = (vis * 5).ceil();
-    bool shown(int row) => (4 - row) < rows; // row 4 = bottom
-    final a = (vis < 1 ? 0.75 : 1.0) * alpha;
-
-    // Dark outline so the cup reads on light backgrounds too.
-    _px(x - 1, y + 4 - rows, _ink, w: 7, h: rows + 2, a: a);
-
-    if (shown(0)) {
-      _px(x, y, _cupWhite, w: 5, a: a);
-      _px(x + 1, y, _coffee, w: 3, a: a); // coffee surface
+  void _drawCup(Offset p, double vis, bool sipping) {
+    // Sprite origin so that the mug body's top-left lands on `p`.
+    final ox = p.dx - 2, oy = p.dy - 1;
+    // Materialize bottom-to-top.
+    final rows = (vis * _mug.length).ceil();
+    final a = vis < 1 ? 0.8 : 1.0;
+    for (var r = 0; r < _mug.length; r++) {
+      if (_mug.length - 1 - r >= rows) continue;
+      final line = _mug[r];
+      for (var c = 0; c < line.length; c++) {
+        final color = _mugColors[line[c]];
+        if (color != null) _px(ox + c, oy + r, color, a: a);
+      }
     }
-    if (shown(1)) _px(x, y + 1, _cupWhite, w: 5, a: a);
-    if (shown(2)) _px(x, y + 2, _cupWhite, w: 5, a: a);
-    if (shown(3)) _px(x + 1, y + 3, _cupShade, w: 4, a: a);
-    if (shown(4)) _px(x + 1, y + 4, _cupShade, w: 3, a: a);
-    // handle on the left
-    if (shown(1)) _px(x - 1, y + 1, _cupShade, a: a);
-    if (shown(2)) _px(x - 2, y + 2, _cupShade, a: a);
-    if (shown(3)) _px(x - 1, y + 3, _cupShade, a: a);
-    _px(x + 3, y + 1, _cupShade, h: 2, a: a); // shading
-
     // Steam.
     if (vis >= 1 && !sipping) {
       for (var k = 0; k < 3; k++) {
         final phase = (seconds * 0.9 + k * 0.33) % 1;
-        final sx = x + 1 + k * 1.5 + sin(phase * pi * 2 + k) * 0.8;
-        _px(sx, y - 2 - phase * 6, _steam, a: (1 - phase) * 0.8 * alpha);
+        final sx = p.dx + 1 + k * 1.6 + sin(phase * pi * 2 + k) * 0.8;
+        _px(sx, p.dy - 3 - phase * 6, _steam, a: (1 - phase) * 0.8);
       }
     }
   }
