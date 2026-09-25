@@ -1,5 +1,6 @@
 import 'package:daniel_portfolio/main.dart';
 import 'package:daniel_portfolio/state/app_settings.dart';
+import 'package:daniel_portfolio/state/game_state.dart';
 import 'package:daniel_portfolio/widgets/pixel_wizard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,6 +12,7 @@ void main() {
     AppSettings.instance
       ..isDark = true
       ..lang = AppLang.pt;
+    GameState.coins.value = 0;
   });
 
   Future<void> pumpApp(WidgetTester tester) async {
@@ -95,5 +97,48 @@ void main() {
     // No spell, no speech.
     expect(find.textContaining('ferramentas'), findsNothing);
     expect(AppSettings.instance.isDark, isTrue);
+  });
+
+  testWidgets('losing the coffee also strikes the coins, which fall',
+      (tester) async {
+    await pumpApp(tester);
+    GameState.coins.value = 5;
+    await tester.pump(const Duration(milliseconds: 6000)); // cup in hand
+
+    await tester.tapAt(spritePoint(tester, 2, 15));
+    // Spell is cast at 42% of the 7 s reaction (~2.9 s): bolt in flight.
+    for (var i = 0; i < 31; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.byKey(const ValueKey('coin-strike')), findsOneWidget);
+    expect(GameState.coins.value, 5, reason: 'not hit yet');
+
+    // The bolt lands and the coins are knocked off the counter.
+    for (var i = 0; i < 12; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(GameState.coins.value, 0);
+    expect(find.byKey(const ValueKey('coin-strike')), findsOneWidget);
+
+    // Everything cleans itself up.
+    for (var i = 0; i < 80; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.byKey(const ValueKey('coin-strike')), findsNothing);
+    await tester.pump(const Duration(seconds: 8));
+  });
+
+  testWidgets('no coins, no strike', (tester) async {
+    await pumpApp(tester);
+    await tester.pump(const Duration(milliseconds: 6000));
+    await tester.tapAt(spritePoint(tester, 2, 15));
+    for (var i = 0; i < 40; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.byKey(const ValueKey('coin-strike')), findsNothing);
+    for (var i = 0; i < 60; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    await tester.pump(const Duration(seconds: 8));
   });
 }

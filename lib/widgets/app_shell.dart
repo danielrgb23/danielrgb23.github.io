@@ -348,6 +348,7 @@ class _CoinCounter extends StatelessWidget {
           label: '$coins coins',
           child: ExcludeSemantics(
             child: Row(
+              key: GameState.coinHudKey,
               mainAxisSize: MainAxisSize.min,
               children: [
                 TweenAnimationBuilder<double>(

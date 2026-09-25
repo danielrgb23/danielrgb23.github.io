@@ -2,7 +2,9 @@ import 'dart:math';
 import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/material.dart';
 import '../state/app_settings.dart';
+import '../state/game_state.dart';
 import '../state/strings.dart';
+import 'coin_strike.dart';
 import 'wizard_speech.dart';
 
 /// A pixel-art wizard that loops: raises a hand, summons a cup of coffee
@@ -203,6 +205,28 @@ class _PixelWizardState extends State<PixelWizard>
     }
   }
 
+  /// Same fury, second target: a bolt from his staff to the coin counter,
+  /// after which the coins fall off the screen (and the score resets).
+  void _castCoinStrike() {
+    if (_reduceMotion || GameState.coins.value <= 0) return;
+    final hud = GameState.coinHudKey.currentContext?.findRenderObject();
+    final me = context.findRenderObject();
+    if (hud is! RenderBox || !hud.attached || me is! RenderBox) return;
+    final to = hud.localToGlobal(Offset(7, hud.size.height / 2));
+    // The orb sits at sprite (20, 3); sprite x=0 is 6 pixels into the box.
+    final from = me.localToGlobal(Offset(
+      (20 + 6) * widget.scale,
+      3 * widget.scale,
+    ));
+    CoinStrike.show(
+      context,
+      from: from,
+      to: to,
+      coins: GameState.coins.value,
+      onImpact: () => GameState.coins.value = 0,
+    );
+  }
+
   void _onReact() {
     final rt = _react.value;
     if (_mode == _Mode.coffee) {
@@ -211,6 +235,7 @@ class _PixelWizardState extends State<PixelWizard>
         // The spell: light theme + the other language, in one rebuild.
         final s = AppSettings.instance;
         s.apply(dark: false, lang: s.isEn ? AppLang.pt : AppLang.en);
+        _castCoinStrike();
       }
       if (!_spoke && rt >= _WizardPainter.coffeeSpellAt + 0.03) {
         _spoke = true;
