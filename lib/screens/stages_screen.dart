@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../data/portfolio_data.dart';
+import '../state/strings.dart';
 import '../theme/app_theme.dart';
 
 class StagesScreen extends StatefulWidget {
@@ -30,15 +31,11 @@ class _StagesScreenState extends State<StagesScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('MAPA DE FASES', style: AppText.kicker),
+        Text(S.stagesKicker, style: AppText.kicker),
         const SizedBox(height: 8),
-        Text('SELECIONE SUA FASE', style: AppText.h2),
+        Text(S.stagesTitle, style: AppText.h2),
         const SizedBox(height: 8),
-        Text(
-          'Arraste pro lado — projetos pessoais e alguns que ajudei a '
-          'construir com outros times.',
-          style: AppText.body,
-        ),
+        Text(S.stagesHint, style: AppText.body),
         const SizedBox(height: 24),
         SizedBox(
           height: 380,

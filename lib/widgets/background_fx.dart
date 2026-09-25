@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import '../state/app_settings.dart';
 import '../theme/app_theme.dart';
 
 class _Star {
@@ -71,7 +72,7 @@ class _BackgroundFxState extends State<BackgroundFx>
         final t = reduceMotion ? 0.0 : _elapsed.inMilliseconds / 1000.0;
         return Stack(
           children: [
-            const Positioned.fill(child: ColoredBox(color: AppColors.bg)),
+            Positioned.fill(child: ColoredBox(color: AppColors.bg)),
             Positioned.fill(
               child: CustomPaint(painter: _StarfieldPainter(_stars, t)),
             ),
@@ -97,7 +98,9 @@ class _StarfieldPainter extends CustomPainter {
         0.15,
         0.9,
       );
-      paint.color = AppColors.text.withOpacity(twinkle);
+      paint.color = AppColors.text.withOpacity(
+        AppSettings.instance.isDark ? twinkle : twinkle * 0.35,
+      );
       canvas.drawCircle(Offset(star.x, y), star.radius, paint);
     }
   }
@@ -119,7 +122,8 @@ class _ScanlinesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.025)
+      ..color = (AppSettings.instance.isDark ? Colors.white : Colors.black)
+          .withOpacity(0.025)
       ..strokeWidth = 1;
     for (double y = 0; y < size.height; y += 3) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/portfolio_data.dart';
+import '../state/strings.dart';
 import '../theme/app_theme.dart';
 
 class MissionsScreen extends StatelessWidget {
@@ -10,11 +11,11 @@ class MissionsScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('LOG DE MISSÕES', style: AppText.kicker),
+        Text(S.missionsKicker, style: AppText.kicker),
         const SizedBox(height: 8),
-        Text('ONDE JÁ JOGUEI', style: AppText.h2),
+        Text(S.missionsTitle, style: AppText.h2),
         const SizedBox(height: 8),
-        Text('Toque em cada missão pra ver os detalhes.', style: AppText.body),
+        Text(S.missionsHint, style: AppText.body),
         const SizedBox(height: 28),
         for (var i = 0; i < quests.length; i++) ...[
           _QuestTile(quest: quests[i], initiallyOpen: i == 0),

@@ -5,6 +5,7 @@ import '../screens/hero_screen.dart';
 import '../screens/missions_screen.dart';
 import '../screens/stages_screen.dart';
 import '../screens/status_screen.dart';
+import '../state/strings.dart';
 import '../theme/app_theme.dart';
 import 'achievement_toast.dart';
 import 'background_fx.dart';
@@ -21,7 +22,7 @@ class _AppShellState extends State<AppShell> {
   final Set<int> _visited = {0};
   final _focusNode = FocusNode();
 
-  static const _sections = ['HOME', 'STATUS', 'MISSÕES', 'FASES', 'CONTATO'];
+  static const _sectionCount = 5;
   static const _sectionIcons = [
     Icons.videogame_asset,
     Icons.bar_chart_rounded,
@@ -45,7 +46,7 @@ class _AppShellState extends State<AppShell> {
   int _konamiProgress = 0;
 
   final _scroll = ScrollController();
-  final _keys = List.generate(_sections.length, (_) => GlobalKey());
+  final _keys = List.generate(_sectionCount, (_) => GlobalKey());
   bool _achieved = false;
 
   @override
@@ -72,24 +73,21 @@ class _AppShellState extends State<AppShell> {
     }
     final atBottom = _scroll.hasClients &&
         _scroll.position.pixels >= _scroll.position.maxScrollExtent - 4;
-    if (atBottom) active = _sections.length - 1;
+    if (atBottom) active = _sectionCount - 1;
     if (active != _index || !_visited.contains(active)) {
       setState(() {
         _index = active;
         _visited.addAll({for (var i = 0; i <= active; i++) i});
       });
     }
-    if (active == _sections.length - 1 && !_achieved) {
+    if (active == _sectionCount - 1 && !_achieved) {
       _achieved = true;
-      AchievementToast.show(
-        context,
-        '🏆 CONQUISTA DESBLOQUEADA:\nChegou até o fim da run!',
-      );
+      AchievementToast.show(context, S.achievementEnd);
     }
   }
 
   void _goTo(int i) {
-    if (i < 0 || i >= _sections.length) return;
+    if (i < 0 || i >= _sectionCount) return;
     final ctx = _keys[i].currentContext;
     if (ctx == null) return;
     Scrollable.ensureVisible(
@@ -109,13 +107,14 @@ class _AppShellState extends State<AppShell> {
     }
     if (_konamiProgress == _konami.length) {
       _konamiProgress = 0;
-      AchievementToast.show(context, '🎮 KONAMI CODE! +100 XP');
+      AchievementToast.show(context, S.konami);
     }
     return KeyEventResult.ignored;
   }
 
   @override
   Widget build(BuildContext context) {
+    final sections = S.sections;
     final width = MediaQuery.of(context).size.width;
     final isCompact = width < 640;
 
@@ -140,7 +139,7 @@ class _AppShellState extends State<AppShell> {
               child: Column(
                 children: [
                   _Header(
-                    sections: _sections,
+                    sections: sections,
                     index: _index,
                     visited: _visited,
                     isCompact: isCompact,
@@ -187,10 +186,10 @@ class _AppShellState extends State<AppShell> {
                 selectedFontSize: 10,
                 unselectedFontSize: 10,
                 items: [
-                  for (var i = 0; i < _sections.length; i++)
+                  for (var i = 0; i < sections.length; i++)
                     BottomNavigationBarItem(
                       icon: Icon(_sectionIcons[i]),
-                      label: _sections[i],
+                      label: sections[i],
                     ),
                 ],
               )
@@ -219,8 +218,8 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final progress = visited.length / sections.length;
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xD90D0221),
+      decoration: BoxDecoration(
+        color: AppColors.bg.withOpacity(0.85),
         border: Border(bottom: BorderSide(color: AppColors.border, width: 2)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -265,7 +264,7 @@ class _Header extends StatelessWidget {
                 value: value,
                 minHeight: 3,
                 backgroundColor: AppColors.bgPanel,
-                valueColor: const AlwaysStoppedAnimation(AppColors.cyan),
+                valueColor: AlwaysStoppedAnimation(AppColors.cyan),
               ),
             ),
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../state/strings.dart';
 import '../theme/app_theme.dart';
 import '../widgets/achievement_toast.dart';
 
@@ -76,7 +77,7 @@ class _HeroScreenState extends State<HeroScreen>
     }
     if (_avatarTaps >= 5) {
       _avatarTaps = 0;
-      AchievementToast.show(context, '👀 ACHOU O EASTER EGG ESCONDIDO!');
+      AchievementToast.show(context, S.easterEgg);
     }
   }
 
@@ -87,7 +88,7 @@ class _HeroScreenState extends State<HeroScreen>
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'INSIRA A FICHA PARA CONTINUAR',
+            S.heroKicker,
             textAlign: TextAlign.center,
             style: AppText.kicker,
           ),
@@ -105,7 +106,7 @@ class _HeroScreenState extends State<HeroScreen>
                     shape: BoxShape.circle,
                     border: Border.all(color: AppColors.gold, width: 3),
                     boxShadow: [
-                      const BoxShadow(
+                      BoxShadow(
                         color: AppColors.bgPanel,
                         blurRadius: 0,
                         spreadRadius: 6,
@@ -141,12 +142,7 @@ class _HeroScreenState extends State<HeroScreen>
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 560),
             child: Text(
-              'Sou desenvolvedor mobile há mais de 4 anos, com passagem por '
-              'Android nativo, iOS e Flutter — incluindo uma temporada '
-              'internacional em um time global. Já entreguei produtos do '
-              'zero até a loja, como o Servirologia, hoje com mais de 1 '
-              'milhão de usuários. Atualmente em busca de uma posição de '
-              'Mobile Developer Pleno.',
+              S.heroBio,
               textAlign: TextAlign.center,
               style: AppText.body,
             ),
@@ -172,7 +168,7 @@ class _HeroScreenState extends State<HeroScreen>
               onPressed: widget.onStart,
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.cyan,
-                side: const BorderSide(color: AppColors.cyan, width: 2),
+                side: BorderSide(color: AppColors.cyan, width: 2),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 22,
                   vertical: 16,
@@ -181,7 +177,7 @@ class _HeroScreenState extends State<HeroScreen>
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
-              child: Text('▶ PRESS START', style: AppText.button),
+              child: Text(S.pressStart, style: AppText.button),
             ),
           ),
         ],

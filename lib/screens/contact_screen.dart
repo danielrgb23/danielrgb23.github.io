@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../data/portfolio_data.dart';
+import '../state/strings.dart';
 import '../theme/app_theme.dart';
 
 class ContactScreen extends StatelessWidget {
@@ -21,7 +22,7 @@ class ContactScreen extends StatelessWidget {
         Text('CONTINUE?', style: AppText.h2, textAlign: TextAlign.center),
         const SizedBox(height: 8),
         Text(
-          'Bora trocar uma ideia.',
+          S.contactHint,
           style: AppText.body,
           textAlign: TextAlign.center,
         ),
@@ -60,7 +61,7 @@ class ContactScreen extends StatelessWidget {
         ),
         const SizedBox(height: 50),
         Text(
-          'Feito com Flutter de verdade e café. © 2026 Daniel Augusto.',
+          S.footer,
           style: AppText.small,
           textAlign: TextAlign.center,
         ),

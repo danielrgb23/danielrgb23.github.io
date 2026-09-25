@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/portfolio_data.dart';
+import '../state/strings.dart';
 import '../theme/app_theme.dart';
 
 class StatusScreen extends StatefulWidget {
@@ -38,7 +39,7 @@ class _StatusScreenState extends State<StatusScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('FICHA DO JOGADOR', style: AppText.kicker),
+        Text(S.statusKicker, style: AppText.kicker),
         const SizedBox(height: 8),
         Text('STATUS', style: AppText.h2),
         const SizedBox(height: 28),
@@ -48,8 +49,7 @@ class _StatusScreenState extends State<StatusScreen>
         ],
         const SizedBox(height: 8),
         Text(
-          '* Os níveis são só pra deixar o clima mais divertido — na vida '
-          'real sempre aparece um chefe novo pela frente.',
+          S.statusNote,
           style: AppText.small,
         ),
       ],
@@ -99,7 +99,7 @@ class _SkillBar extends StatelessWidget {
                   alignment: Alignment.centerLeft,
                   widthFactor: (skill.progress * anim.value).clamp(0.0, 1.0),
                   heightFactor: 1,
-                  child: const DecoratedBox(
+                  child: DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [AppColors.cyan, AppColors.magenta],
