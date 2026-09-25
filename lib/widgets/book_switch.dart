@@ -31,19 +31,37 @@ class _BookSwitchState extends State<BookSwitch>
     duration: const Duration(milliseconds: 1600),
   );
 
+  // Language the book currently shows (its previous one while flipping).
   AppLang _from = AppSettings.instance.lang;
+  AppLang _shown = AppSettings.instance.lang;
+
+  @override
+  void initState() {
+    super.initState();
+    AppSettings.instance.addListener(_onLanguageChanged);
+  }
 
   @override
   void dispose() {
+    AppSettings.instance.removeListener(_onLanguageChanged);
     _flip.dispose();
     super.dispose();
   }
 
   void _onTap() {
     if (_flip.isAnimating) return;
-    _from = AppSettings.instance.lang;
-    // Language changes together with the animation, not after it.
+    // The language change itself triggers the flip (see below), so the
+    // animation and the switch happen together.
     widget.onFlip();
+  }
+
+  // Riffle the pages whenever the language changes, whoever changed it (the
+  // book itself or, say, an angry wizard).
+  void _onLanguageChanged() {
+    final lang = AppSettings.instance.lang;
+    if (lang == _shown) return;
+    _from = _shown;
+    _shown = lang;
     _flip.forward(from: 0);
   }
 
