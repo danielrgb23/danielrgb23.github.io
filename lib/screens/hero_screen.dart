@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../state/strings.dart';
 import '../theme/app_theme.dart';
 import '../widgets/achievement_toast.dart';
+import '../widgets/pixel_wizard.dart';
 
 class HeroScreen extends StatefulWidget {
   const HeroScreen({super.key, required this.onStart});
@@ -11,8 +12,7 @@ class HeroScreen extends StatefulWidget {
   State<HeroScreen> createState() => _HeroScreenState();
 }
 
-class _HeroScreenState extends State<HeroScreen>
-    with TickerProviderStateMixin {
+class _HeroScreenState extends State<HeroScreen> with TickerProviderStateMixin {
   late final AnimationController _glowController;
   late final AnimationController _pulseController;
   late final AnimationController _titleController;
@@ -93,41 +93,58 @@ class _HeroScreenState extends State<HeroScreen>
             style: AppText.kicker,
           ),
           const SizedBox(height: 26),
-          GestureDetector(
-            onTap: _handleAvatarTap,
-            child: AnimatedBuilder(
-              animation: _glowController,
-              builder: (context, child) {
-                final glow = 0.3 + 0.25 * _glowController.value;
-                return Container(
-                  width: 132,
-                  height: 132,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.gold, width: 3),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.bgPanel,
-                        blurRadius: 0,
-                        spreadRadius: 6,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final narrow = MediaQuery.of(context).size.width < 520;
+              final scale = narrow ? 3.0 : 4.0;
+              final wizardW = PixelWizard.gridW * scale;
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Invisible twin keeps the avatar centered.
+                  SizedBox(width: wizardW),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: _handleAvatarTap,
+                    child: AnimatedBuilder(
+                      animation: _glowController,
+                      builder: (context, child) {
+                        final glow = 0.3 + 0.25 * _glowController.value;
+                        return Container(
+                          width: 132,
+                          height: 132,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: AppColors.gold, width: 3),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.bgPanel,
+                                blurRadius: 0,
+                                spreadRadius: 6,
+                              ),
+                              BoxShadow(
+                                color: AppColors.gold.withOpacity(glow),
+                                blurRadius: 32,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: child,
+                        );
+                      },
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/img/profile_image.png',
+                          fit: BoxFit.cover,
+                        ),
                       ),
-                      BoxShadow(
-                        color: AppColors.gold.withOpacity(glow),
-                        blurRadius: 32,
-                        spreadRadius: 2,
-                      ),
-                    ],
+                    ),
                   ),
-                  child: child,
-                );
-              },
-              child: ClipOval(
-                child: Image.asset(
-                  'assets/img/profile_image.png',
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
+                  const SizedBox(width: 8),
+                  PixelWizard(scale: scale),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 26),
           FadeTransition(
