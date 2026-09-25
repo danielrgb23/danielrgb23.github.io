@@ -5,10 +5,13 @@ import '../screens/hero_screen.dart';
 import '../screens/missions_screen.dart';
 import '../screens/stages_screen.dart';
 import '../screens/status_screen.dart';
+import '../state/app_settings.dart';
 import '../state/strings.dart';
 import '../theme/app_theme.dart';
 import 'achievement_toast.dart';
 import 'background_fx.dart';
+import 'book_switch.dart';
+import 'lamp_switch.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -112,11 +115,38 @@ class _AppShellState extends State<AppShell> {
     return KeyEventResult.ignored;
   }
 
+  bool _lampAchieved = false;
+  bool _bookAchieved = false;
+
+  void _toggleTheme() {
+    AppSettings.instance.toggleTheme();
+    if (_lampAchieved) return;
+    _lampAchieved = true;
+    // Shown after the rebuild so the text matches the new state.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        AchievementToast.show(
+          context,
+          AppSettings.instance.isDark ? S.lampOff : S.lampOn,
+        );
+      }
+    });
+  }
+
+  void _toggleLang() {
+    AppSettings.instance.toggleLang();
+    if (_bookAchieved) return;
+    _bookAchieved = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) AchievementToast.show(context, S.bookFlip);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final sections = S.sections;
     final width = MediaQuery.of(context).size.width;
-    final isCompact = width < 640;
+    final isCompact = width < 760;
 
     final screens = [
       HeroScreen(onStart: () => _goTo(1)),
@@ -173,6 +203,22 @@ class _AppShellState extends State<AppShell> {
                 ],
               ),
             ),
+            // Lamp + book hang from the top-right corner, over the header.
+            Positioned(
+              top: MediaQuery.of(context).padding.top,
+              right: 12,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: BookSwitch(onFlip: _toggleLang),
+                  ),
+                  const SizedBox(width: 6),
+                  LampSwitch(onToggle: _toggleTheme),
+                ],
+              ),
+            ),
           ],
         ),
         bottomNavigationBar: isCompact
@@ -222,7 +268,8 @@ class _Header extends StatelessWidget {
         color: AppColors.bg.withOpacity(0.85),
         border: Border(bottom: BorderSide(color: AppColors.border, width: 2)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      // Right padding leaves room for the lamp + book overlay.
+      padding: const EdgeInsets.fromLTRB(20, 14, 200, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

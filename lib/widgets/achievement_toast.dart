@@ -7,16 +7,24 @@ import '../theme/app_theme.dart';
 /// shell qualifies).
 class AchievementToast {
   static OverlayEntry? _entry;
+  static final _removed = Set<OverlayEntry>.identity();
+
+  // An entry may be dismissed both by a newer toast and by its own timer;
+  // OverlayEntry.remove() must only run once.
+  static void _dismiss(OverlayEntry? entry) {
+    if (entry == null || !_removed.add(entry)) return;
+    entry.remove();
+  }
 
   static void show(BuildContext context, String message) {
-    _entry?.remove();
+    _dismiss(_entry);
     final overlay = Overlay.of(context);
     late final OverlayEntry entry;
     entry = OverlayEntry(builder: (context) => _ToastWidget(message: message));
     _entry = entry;
     overlay.insert(entry);
     Future.delayed(const Duration(milliseconds: 3600), () {
-      entry.remove();
+      _dismiss(entry);
       if (identical(_entry, entry)) _entry = null;
     });
   }
