@@ -90,12 +90,20 @@ class _SpeechBoxState extends State<_SpeechBox>
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '🧙 ${S.wizardName}',
-                    style: AppText.pixel.copyWith(
-                      fontSize: 10,
-                      color: AppColors.magenta,
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.auto_fix_high,
+                          size: 16, color: AppColors.magenta),
+                      const SizedBox(width: 8),
+                      Text(
+                        S.wizardName,
+                        style: AppText.pixel.copyWith(
+                          fontSize: 10,
+                          color: AppColors.magenta,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 10),
                   AnimatedBuilder(

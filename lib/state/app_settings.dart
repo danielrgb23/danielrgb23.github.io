@@ -17,10 +17,9 @@ class AppSettings extends ChangeNotifier {
   static const _kLang = 'lang';
 
   bool isDark = true;
-  AppLang lang =
-      ui.PlatformDispatcher.instance.locale.languageCode == 'pt'
-          ? AppLang.pt
-          : AppLang.en;
+  AppLang lang = ui.PlatformDispatcher.instance.locale.languageCode == 'pt'
+      ? AppLang.pt
+      : AppLang.en;
 
   bool get isEn => lang == AppLang.en;
 

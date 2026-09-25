@@ -64,7 +64,8 @@ class _SkillBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final anim = CurvedAnimation(parent: controller, curve: Curves.easeOutCubic);
+    final anim =
+        CurvedAnimation(parent: controller, curve: Curves.easeOutCubic);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -74,7 +75,8 @@ class _SkillBar extends StatelessWidget {
             Flexible(
               child: Text(
                 skill.name,
-                style: AppText.mono.copyWith(fontSize: 13, color: AppColors.text),
+                style:
+                    AppText.mono.copyWith(fontSize: 13, color: AppColors.text),
               ),
             ),
             Text(

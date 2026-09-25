@@ -77,7 +77,7 @@ class _HeroScreenState extends State<HeroScreen> with TickerProviderStateMixin {
     }
     if (_avatarTaps >= 5) {
       _avatarTaps = 0;
-      AchievementToast.show(context, S.easterEgg);
+      AchievementToast.show(context, S.easterEgg, icon: Icons.visibility);
     }
   }
 
@@ -110,31 +110,35 @@ class _HeroScreenState extends State<HeroScreen> with TickerProviderStateMixin {
                       animation: _glowController,
                       builder: (context, child) {
                         final glow = 0.3 + 0.25 * _glowController.value;
-                        return Container(
-                          width: 132,
-                          height: 132,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: AppColors.gold, width: 3),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.bgPanel,
-                                blurRadius: 0,
-                                spreadRadius: 6,
-                              ),
-                              BoxShadow(
-                                color: AppColors.gold.withOpacity(glow),
-                                blurRadius: 32,
-                                spreadRadius: 2,
-                              ),
-                            ],
+                        // Own layer: the blurred glow repaints every frame.
+                        return RepaintBoundary(
+                          child: Container(
+                            width: 132,
+                            height: 132,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border:
+                                  Border.all(color: AppColors.gold, width: 3),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.bgPanel,
+                                  blurRadius: 0,
+                                  spreadRadius: 6,
+                                ),
+                                BoxShadow(
+                                  color: AppColors.gold.withOpacity(glow),
+                                  blurRadius: 32,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: child,
                           ),
-                          child: child,
                         );
                       },
                       child: ClipOval(
                         child: Image.asset(
-                          'assets/img/profile_image.png',
+                          'assets/img/profile_image.jpg',
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -169,16 +173,19 @@ class _HeroScreenState extends State<HeroScreen> with TickerProviderStateMixin {
             animation: _pulseController,
             builder: (context, child) {
               final glow = 0.15 + 0.4 * _pulseController.value;
-              return Container(
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.cyan.withOpacity(glow),
-                      blurRadius: 22,
-                    ),
-                  ],
+              // Own layer: the blurred glow repaints every frame.
+              return RepaintBoundary(
+                child: Container(
+                  decoration: BoxDecoration(
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.cyan.withOpacity(glow),
+                        blurRadius: 22,
+                      ),
+                    ],
+                  ),
+                  child: child,
                 ),
-                child: child,
               );
             },
             child: OutlinedButton(

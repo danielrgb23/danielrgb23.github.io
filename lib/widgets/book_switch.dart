@@ -95,7 +95,8 @@ class _BookSwitchState extends State<BookSwitch>
       child: code != null
           ? Text(
               code,
-              style: AppText.pixel.copyWith(fontSize: 13, color: AppColors.gold),
+              style:
+                  AppText.pixel.copyWith(fontSize: 13, color: AppColors.gold),
             )
           : Column(
               mainAxisAlignment: MainAxisAlignment.center,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../state/app_settings.dart';
 
 /// One full color set. The app has a dark ("arcade night") and a light
@@ -16,7 +15,15 @@ class _Palette {
     required this.textDim,
     required this.border,
   });
-  final Color bg, bgPanel, bgPanelAlt, cyan, magenta, gold, text, textDim, border;
+  final Color bg,
+      bgPanel,
+      bgPanelAlt,
+      cyan,
+      magenta,
+      gold,
+      text,
+      textDim,
+      border;
 }
 
 const _dark = _Palette(
@@ -65,40 +72,40 @@ class AppColors {
 class AppText {
   AppText._();
 
-  static TextStyle get pixel => GoogleFonts.pressStart2p();
-  static TextStyle get mono => GoogleFonts.spaceMono();
+  static const pixel = TextStyle(fontFamily: 'PressStart2P');
+  static const mono = TextStyle(fontFamily: 'SpaceMono');
 
   static TextStyle get kicker => pixel.copyWith(
-    fontSize: 11,
-    color: AppColors.magenta,
-    letterSpacing: 1,
-  );
+        fontSize: 11,
+        color: AppColors.magenta,
+        letterSpacing: 1,
+      );
 
   static TextStyle get h1 => pixel.copyWith(
-    fontSize: 26,
-    height: 1.5,
-    color: AppColors.text,
-  );
+        fontSize: 26,
+        height: 1.5,
+        color: AppColors.text,
+      );
 
   static TextStyle get h2 => pixel.copyWith(
-    fontSize: 18,
-    height: 1.5,
-    color: AppColors.cyan,
-  );
+        fontSize: 18,
+        height: 1.5,
+        color: AppColors.cyan,
+      );
 
   static TextStyle get body => mono.copyWith(
-    fontSize: 15,
-    height: 1.65,
-    color: AppColors.textDim,
-  );
+        fontSize: 15,
+        height: 1.65,
+        color: AppColors.textDim,
+      );
 
   static TextStyle get button => pixel.copyWith(
-    fontSize: 11,
-    color: AppColors.cyan,
-  );
+        fontSize: 11,
+        color: AppColors.cyan,
+      );
 
   static TextStyle get small => mono.copyWith(
-    fontSize: 12,
-    color: AppColors.textDim,
-  );
+        fontSize: 12,
+        color: AppColors.textDim,
+      );
 }

@@ -99,7 +99,8 @@ class _PixelWizardState extends State<PixelWizard>
   }
 
   // Local pixel position -> sprite space.
-  Offset _toSprite(Offset p) => Offset(p.dx / widget.scale - 6, p.dy / widget.scale);
+  Offset _toSprite(Offset p) =>
+      Offset(p.dx / widget.scale - 6, p.dy / widget.scale);
 
   /// What is under the pointer, if it can be stolen.
   _Item? _hit(Offset local) {
@@ -143,7 +144,9 @@ class _PixelWizardState extends State<PixelWizard>
       // Let go while pulling: the item keeps going in that direction.
       final dir = vel.distance > 25
           ? vel / vel.distance
-          : (_dragOff.distance > 0 ? _dragOff / _dragOff.distance : _defaultDir(_dragItem!));
+          : (_dragOff.distance > 0
+              ? _dragOff / _dragOff.distance
+              : _defaultDir(_dragItem!));
       _steal(_dragItem!, dir);
     } else {
       _dropBack();
@@ -159,9 +162,8 @@ class _PixelWizardState extends State<PixelWizard>
     _snap.forward(from: 0);
   }
 
-  Offset _defaultDir(_Item item) => item == _Item.cup
-      ? const Offset(-0.8, -0.6)
-      : const Offset(0.6, -0.8);
+  Offset _defaultDir(_Item item) =>
+      item == _Item.cup ? const Offset(-0.8, -0.6) : const Offset(0.6, -0.8);
 
   void _onTapUp(TapUpDetails d) {
     if (_mode != _Mode.loop) return;
@@ -246,19 +248,23 @@ class _PixelWizardState extends State<PixelWizard>
             child: SizedBox(
               width: PixelWizard.gridW * s,
               height: PixelWizard.gridH * s,
-              child: AnimatedBuilder(
-                animation: Listenable.merge([_loop, _react]),
-                builder: (context, _) => CustomPaint(
-                  // Items can be dragged/fly well outside the sprite box.
-                  painter: _WizardPainter(
-                    t: _mode == _Mode.loop ? _loop.value : _frozenT,
-                    seconds: _clock.elapsedMilliseconds / 1000,
-                    scale: s,
-                    mode: _mode,
-                    rt: _react.value,
-                    item: _dragItem,
-                    dragOff: _dragOff,
-                    flyDir: _flyDir,
+              // Own layer: the wizard animates constantly and must not force
+              // the rest of the page to repaint with him.
+              child: RepaintBoundary(
+                child: AnimatedBuilder(
+                  animation: Listenable.merge([_loop, _react]),
+                  builder: (context, _) => CustomPaint(
+                    // Items can be dragged/fly well outside the sprite box.
+                    painter: _WizardPainter(
+                      t: _mode == _Mode.loop ? _loop.value : _frozenT,
+                      seconds: _clock.elapsedMilliseconds / 1000,
+                      scale: s,
+                      mode: _mode,
+                      rt: _react.value,
+                      item: _dragItem,
+                      dragOff: _dragOff,
+                      flyDir: _flyDir,
+                    ),
                   ),
                 ),
               ),
@@ -312,7 +318,8 @@ const _mouth = Offset(1, 12);
 const _restHand = Offset(2, 25);
 const _raisedHand = Offset(-3, 14);
 
-double _seg(double v, double a, double b) => ((v - a) / (b - a)).clamp(0.0, 1.0);
+double _seg(double v, double a, double b) =>
+    ((v - a) / (b - a)).clamp(0.0, 1.0);
 double _lerp(double a, double b, double k) => a + (b - a) * k;
 Offset _lerpO(Offset a, Offset b, double k) =>
     Offset(_lerp(a.dx, b.dx, k), _lerp(a.dy, b.dy, k));
@@ -374,8 +381,11 @@ Offset _handAt(double t, _Cup cup, double seconds) {
   } else if (holding) {
     hand = t >= _catchEnd - 0.04
         ? cupHand
-        : _lerpO(_raisedHand, cupHand,
-            Curves.easeOut.transform(_seg(t, _summonEnd + 0.02, _catchEnd - 0.04)));
+        : _lerpO(
+            _raisedHand,
+            cupHand,
+            Curves.easeOut
+                .transform(_seg(t, _summonEnd + 0.02, _catchEnd - 0.04)));
   } else {
     hand = _lerpO(cupHand, _restHand,
         Curves.easeInOut.transform(_seg(t, _lowerEnd + 0.03, _fadeEnd + 0.03)));
@@ -431,7 +441,11 @@ class _Buf {
         if (cells[y * w + x] != null) continue;
         bool filled(int dx, int dy) {
           final nx = x + dx, ny = y + dy;
-          return nx >= 0 && nx < w && ny >= 0 && ny < h && cells[ny * w + nx] != null;
+          return nx >= 0 &&
+              nx < w &&
+              ny >= 0 &&
+              ny < h &&
+              cells[ny * w + nx] != null;
         }
 
         if (filled(1, 0) || filled(-1, 0) || filled(0, 1) || filled(0, -1)) {
@@ -540,7 +554,8 @@ class _WizardPainter extends CustomPainter {
     var cupOff = Offset.zero, cupAlpha = 1.0;
     var staffOff = Offset.zero, staffAlpha = 1.0, staffShown = true;
 
-    Offset flown(double k) => dragOff + flyDir * (110 * Curves.easeIn.transform(k));
+    Offset flown(double k) =>
+        dragOff + flyDir * (110 * Curves.easeIn.transform(k));
 
     if (grab) {
       if (item == _Item.cup) cupOff = dragOff;
@@ -567,8 +582,8 @@ class _WizardPainter extends CustomPainter {
       // existence ("plink") and his empty hand drops.
       if (cup.vis > 0) {
         cupAlpha = rt < 0.05 ? 1 : 0;
-        hand = _round(_lerpO(hand, _restHand,
-            Curves.easeInOut.transform(_seg(rt, 0.10, 0.28))));
+        hand = _round(_lerpO(
+            hand, _restHand, Curves.easeInOut.transform(_seg(rt, 0.10, 0.28))));
       }
       if (rt < 0.12) {
         final k = _seg(rt, 0, 0.12);
@@ -584,11 +599,13 @@ class _WizardPainter extends CustomPainter {
       wideEyes = rt >= 0.02 && rt < 0.14;
       question = rt >= 0.12 && rt < 0.34 && (seconds * 5).floor().isEven;
       if (rt >= 0.30 && rt < 0.46) {
-        rightHandY = _lerp(21, 10, Curves.easeOut.transform(_seg(rt, 0.30, 0.46)));
+        rightHandY =
+            _lerp(21, 10, Curves.easeOut.transform(_seg(rt, 0.30, 0.46)));
       } else if (rt >= 0.46 && rt < 0.64) {
         rightHandY = 10;
       } else if (rt >= 0.64 && rt < 0.74) {
-        rightHandY = _lerp(10, 21, Curves.easeInOut.transform(_seg(rt, 0.64, 0.74)));
+        rightHandY =
+            _lerp(10, 21, Curves.easeInOut.transform(_seg(rt, 0.64, 0.74)));
       }
       beam = _seg(rt, 0.34, 0.46) * (1 - _seg(rt, 0.62, 0.74));
       flash = (rt >= 0.58 && rt < 0.68) ? 1 : 0;
@@ -662,11 +679,14 @@ class _WizardPainter extends CustomPainter {
     // ---- cup -----------------------------------------------------------
     if (cup.vis > 0 && cupAlpha > 0.02) {
       _alpha = cupAlpha;
-      _drawCup(_round(cup.pos + cupOff), cup.vis, mode == _Mode.loop && cup.sipping);
+      _drawCup(
+          _round(cup.pos + cupOff), cup.vis, mode == _Mode.loop && cup.sipping);
       _alpha = 1;
     }
     if (fading ||
-        (mode == _Mode.loop && t > _summonEnd - 0.05 && t < _summonEnd + 0.03)) {
+        (mode == _Mode.loop &&
+            t > _summonEnd - 0.05 &&
+            t < _summonEnd + 0.03)) {
       _burst(cup.pos + const Offset(3, 3), (t - _lowerEnd) * 20);
     }
 
@@ -851,7 +871,8 @@ class _WizardPainter extends CustomPainter {
 
   void _summonSparkles() {
     for (var k = 0; k < 9; k++) {
-      final p = _seg(t, _summonStart + k * 0.012, _summonStart + 0.10 + k * 0.012);
+      final p =
+          _seg(t, _summonStart + k * 0.012, _summonStart + 0.10 + k * 0.012);
       if (p <= 0 || p >= 1) continue;
       // Arc from the orb over to where the cup will appear.
       const from = Offset(19, 2), to = Offset(-2, 9);
@@ -859,7 +880,8 @@ class _WizardPainter extends CustomPainter {
       final color = k.isEven ? _gold : _orb;
       _px(pos.dx, pos.dy, color);
       if (p > 0.2 && p < 0.8) {
-        final tail = _lerpO(from, to, p - 0.08) + Offset(0, -6 * sin((p - 0.08) * pi));
+        final tail =
+            _lerpO(from, to, p - 0.08) + Offset(0, -6 * sin((p - 0.08) * pi));
         _px(tail.dx, tail.dy, color, a: 0.5);
       }
     }
@@ -871,8 +893,9 @@ class _WizardPainter extends CustomPainter {
       final k = _seg(rt, 0.02, 0.22);
       for (var i = 0; i < 6; i++) {
         final a = i * pi / 3 + 0.4;
-        _px(cup.pos.dx + 3 + cos(a) * (2 + 5 * k), cup.pos.dy + 3 + sin(a) * (2 + 5 * k),
-            _steam, a: 1 - k);
+        _px(cup.pos.dx + 3 + cos(a) * (2 + 5 * k),
+            cup.pos.dy + 3 + sin(a) * (2 + 5 * k), _steam,
+            a: 1 - k);
       }
     }
     // Rage sparks crackling around the orb, then the spell burst.
@@ -886,7 +909,8 @@ class _WizardPainter extends CustomPainter {
       }
     }
     if (rt >= coffeeSpellAt - 0.02 && rt < coffeeSpellAt + 0.12) {
-      _burst(const Offset(20, 3), _seg(rt, coffeeSpellAt - 0.02, coffeeSpellAt + 0.12),
+      _burst(const Offset(20, 3),
+          _seg(rt, coffeeSpellAt - 0.02, coffeeSpellAt + 0.12),
           radius: 12);
     }
   }

@@ -4,13 +4,11 @@ import 'package:daniel_portfolio/widgets/book_switch.dart';
 import 'package:daniel_portfolio/widgets/lamp_switch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    GoogleFonts.config.allowRuntimeFetching = false;
     AppSettings.instance
       ..isDark = true
       ..lang = AppLang.pt;

@@ -17,8 +17,7 @@ class LampSwitch extends StatefulWidget {
   State<LampSwitch> createState() => _LampSwitchState();
 }
 
-class _LampSwitchState extends State<LampSwitch>
-    with TickerProviderStateMixin {
+class _LampSwitchState extends State<LampSwitch> with TickerProviderStateMixin {
   static const _maxPull = 18.0;
 
   late final AnimationController _down; // chain being pulled (tap only)
@@ -158,7 +157,8 @@ class _LampPainter extends CustomPainter {
             const Color(0xFFFFCD3C).withOpacity(0.55 * glow),
             const Color(0xFFFFCD3C).withOpacity(0),
           ],
-        ).createShader(Rect.fromCircle(center: const Offset(cx, 40), radius: 54));
+        ).createShader(
+            Rect.fromCircle(center: const Offset(cx, 40), radius: 54));
       canvas.drawCircle(const Offset(cx, 40), 54, halo);
     }
 
@@ -166,7 +166,8 @@ class _LampPainter extends CustomPainter {
     canvas.drawLine(const Offset(cx, 0), const Offset(cx, 14), line);
 
     // Bulb (drawn before the shade so the shade overlaps its top).
-    final bulbColor = Color.lerp(const Color(0xFF6F6390), const Color(0xFFFFE27A), glow)!;
+    final bulbColor =
+        Color.lerp(const Color(0xFF6F6390), const Color(0xFFFFE27A), glow)!;
     canvas.drawCircle(const Offset(cx, 38), 7, Paint()..color = bulbColor);
     if (glow > 0) {
       canvas.drawCircle(
@@ -202,7 +203,8 @@ class _LampPainter extends CustomPainter {
     for (double y = 40; y < endY; y += 6) {
       canvas.drawCircle(Offset(chainX, y), 1.6, bead);
     }
-    canvas.drawCircle(Offset(chainX, endY + 4), 5, Paint()..color = const Color(0xFFFFCD3C));
+    canvas.drawCircle(
+        Offset(chainX, endY + 4), 5, Paint()..color = const Color(0xFFFFCD3C));
     canvas.drawCircle(
       Offset(chainX, endY + 4),
       5,

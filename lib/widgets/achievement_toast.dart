@@ -16,11 +16,17 @@ class AchievementToast {
     entry.remove();
   }
 
-  static void show(BuildContext context, String message) {
+  static void show(
+    BuildContext context,
+    String message, {
+    IconData icon = Icons.emoji_events,
+  }) {
     _dismiss(_entry);
     final overlay = Overlay.of(context);
     late final OverlayEntry entry;
-    entry = OverlayEntry(builder: (context) => _ToastWidget(message: message));
+    entry = OverlayEntry(
+      builder: (context) => _ToastWidget(message: message, icon: icon),
+    );
     _entry = entry;
     overlay.insert(entry);
     Future.delayed(const Duration(milliseconds: 3600), () {
@@ -31,8 +37,9 @@ class AchievementToast {
 }
 
 class _ToastWidget extends StatefulWidget {
-  const _ToastWidget({required this.message});
+  const _ToastWidget({required this.message, required this.icon});
   final String message;
+  final IconData icon;
 
   @override
   State<_ToastWidget> createState() => _ToastWidgetState();
@@ -51,7 +58,8 @@ class _ToastWidgetState extends State<_ToastWidget>
       duration: const Duration(milliseconds: 400),
     );
     _offset = Tween<Offset>(begin: const Offset(0, 1.4), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+        .animate(
+            CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
     _controller.forward();
     Future.delayed(const Duration(milliseconds: 3200), () {
       if (mounted) _controller.reverse();
@@ -87,14 +95,25 @@ class _ToastWidgetState extends State<_ToastWidget>
                 ),
               ],
             ),
-            child: Text(
-              widget.message,
-              textAlign: TextAlign.center,
-              style: AppText.pixel.copyWith(
-                fontSize: 11,
-                color: AppColors.gold,
-                height: 1.6,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icons instead of emoji: emoji make the web build download
+                // a large fallback font.
+                Icon(widget.icon, color: AppColors.gold, size: 22),
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Text(
+                    widget.message,
+                    textAlign: TextAlign.left,
+                    style: AppText.pixel.copyWith(
+                      fontSize: 11,
+                      color: AppColors.gold,
+                      height: 1.6,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

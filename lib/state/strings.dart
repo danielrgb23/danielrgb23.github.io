@@ -16,29 +16,29 @@ class S {
       ];
 
   static String get achievementEnd => tr(
-        '🏆 CONQUISTA DESBLOQUEADA:\nChegou até o fim da run!',
-        '🏆 ACHIEVEMENT UNLOCKED:\nYou reached the end of the run!',
+        'CONQUISTA DESBLOQUEADA:\nChegou até o fim da run!',
+        'ACHIEVEMENT UNLOCKED:\nYou reached the end of the run!',
       );
-  static String get konami => tr('🎮 KONAMI CODE! +100 XP', '🎮 KONAMI CODE! +100 XP');
+  static String get konami => 'KONAMI CODE! +100 XP';
   static String get easterEgg => tr(
-        '👀 ACHOU O EASTER EGG ESCONDIDO!',
-        '👀 YOU FOUND THE HIDDEN EASTER EGG!',
+        'ACHOU O EASTER EGG ESCONDIDO!',
+        'YOU FOUND THE HIDDEN EASTER EGG!',
       );
   static String get lampOn => tr(
-        '💡 CONQUISTA: Fez-se a luz!',
-        '💡 ACHIEVEMENT: Let there be light!',
+        'CONQUISTA: Fez-se a luz!',
+        'ACHIEVEMENT: Let there be light!',
       );
   static String get lampOff => tr(
-        '🌙 CONQUISTA: Modo furtivo ativado!',
-        '🌙 ACHIEVEMENT: Stealth mode on!',
+        'CONQUISTA: Modo furtivo ativado!',
+        'ACHIEVEMENT: Stealth mode on!',
       );
   static String get bookFlip => tr(
-        '📖 CONQUISTA: Poliglota! Idioma alterado.',
-        '📖 ACHIEVEMENT: Polyglot! Language changed.',
+        'CONQUISTA: Poliglota! Idioma alterado.',
+        'ACHIEVEMENT: Polyglot! Language changed.',
       );
 
-  static String get lampTooltip => tr('Puxe a cordinha: tema claro/escuro',
-      'Pull the chain: light/dark theme');
+  static String get lampTooltip => tr(
+      'Puxe a cordinha: tema claro/escuro', 'Pull the chain: light/dark theme');
   static String get bookTooltip =>
       tr('Folheie o livro: idioma', 'Flip the book: language');
 

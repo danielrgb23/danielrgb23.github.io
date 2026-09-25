@@ -9,7 +9,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  google_fonts: ^6.2.1
   shared_preferences: ^2.5.5
   url_launcher: ^6.3.0
 
@@ -21,4 +20,22 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/img/profile_image.png
+    - assets/img/profile_image.jpg
+  fonts:
+    # Bundled (latin subset) instead of fetched from Google Fonts at runtime.
+    - family: PressStart2P
+      fonts:
+        - asset: assets/fonts/PressStart2P-Regular.ttf
+    - family: SpaceMono
+      fonts:
+        - asset: assets/fonts/SpaceMono-Regular.ttf
+        - asset: assets/fonts/SpaceMono-Bold.ttf
+          weight: 700
+    # The CanvasKit web engine downloads Roboto from fonts.gstatic.com at
+    # startup unless the app ships a family with that name. We use Space Mono
+    # as the default text font anyway, so register it under that name too.
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/SpaceMono-Regular.ttf
+        - asset: assets/fonts/SpaceMono-Bold.ttf
+          weight: 700

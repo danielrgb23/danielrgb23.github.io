@@ -50,6 +50,9 @@ class _PortfolioAppState extends State<PortfolioApp> {
       title: 'Daniel Augusto — Mobile Software Engineer',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        // Default text (tooltips, nav labels...) uses a bundled font, so the
+        // web build never has to download Roboto.
+        fontFamily: 'SpaceMono',
         scaffoldBackgroundColor: AppColors.bg,
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColors.cyan,

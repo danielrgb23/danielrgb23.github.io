@@ -110,7 +110,7 @@ class _AppShellState extends State<AppShell> {
     }
     if (_konamiProgress == _konami.length) {
       _konamiProgress = 0;
-      AchievementToast.show(context, S.konami);
+      AchievementToast.show(context, S.konami, icon: Icons.videogame_asset);
     }
     return KeyEventResult.ignored;
   }
@@ -125,9 +125,11 @@ class _AppShellState extends State<AppShell> {
     // Shown after the rebuild so the text matches the new state.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
+        final dark = AppSettings.instance.isDark;
         AchievementToast.show(
           context,
-          AppSettings.instance.isDark ? S.lampOff : S.lampOn,
+          dark ? S.lampOff : S.lampOn,
+          icon: dark ? Icons.dark_mode : Icons.lightbulb,
         );
       }
     });
@@ -138,7 +140,9 @@ class _AppShellState extends State<AppShell> {
     if (_bookAchieved) return;
     _bookAchieved = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) AchievementToast.show(context, S.bookFlip);
+      if (mounted) {
+        AchievementToast.show(context, S.bookFlip, icon: Icons.menu_book);
+      }
     });
   }
 
@@ -278,7 +282,8 @@ class _Header extends StatelessWidget {
             children: [
               Text(
                 'D_R23>',
-                style: AppText.pixel.copyWith(fontSize: 12, color: AppColors.gold),
+                style:
+                    AppText.pixel.copyWith(fontSize: 12, color: AppColors.gold),
               ),
               if (!isCompact)
                 Row(

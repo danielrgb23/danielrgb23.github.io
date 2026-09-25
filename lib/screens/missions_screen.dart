@@ -27,7 +27,7 @@ class MissionsScreen extends StatelessWidget {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: [for (final s in sideQuests) _Tag(s)],
+          children: [for (final s in sideQuests) _SideQuestTag(s)],
         ),
       ],
     );
@@ -69,12 +69,10 @@ class _QuestTileState extends State<_QuestTile> {
                   AnimatedRotation(
                     turns: _open ? 0.25 : 0,
                     duration: const Duration(milliseconds: 200),
-                    child: Text(
-                      '▸',
-                      style: AppText.mono.copyWith(
-                        color: AppColors.magenta,
-                        fontSize: 16,
-                      ),
+                    child: Icon(
+                      Icons.chevron_right,
+                      color: AppColors.magenta,
+                      size: 20,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -144,6 +142,34 @@ class _QuestTileState extends State<_QuestTile> {
                 _open ? CrossFadeState.showSecond : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 250),
             sizeCurve: Curves.easeOutCubic,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SideQuestTag extends StatelessWidget {
+  const _SideQuestTag(this.quest);
+  final SideQuest quest;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(3),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(quest.icon, size: 15, color: AppColors.cyan),
+          const SizedBox(width: 6),
+          Text(
+            quest.label,
+            style:
+                AppText.mono.copyWith(fontSize: 12, color: AppColors.textDim),
           ),
         ],
       ),
