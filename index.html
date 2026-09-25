@@ -30,7 +30,7 @@
       justify-content: center; gap: 22px;
       background: #0d0221; color: #f1eaff;
       font: 12px/1.6 "Courier New", monospace; letter-spacing: 2px;
-      transition: opacity .35s ease;
+      transition: opacity .25s ease;
     }
     #splash.done { opacity: 0; pointer-events: none; }
     #splash .logo { color: #ffcd3c; font-size: 14px; letter-spacing: 3px; }
@@ -61,7 +61,7 @@
       function hide() {
         if (!splash) return;
         splash.classList.add('done');
-        setTimeout(function () { splash && splash.remove(); splash = null; }, 400);
+        setTimeout(function () { splash && splash.remove(); splash = null; }, 300);
       }
       window.addEventListener('flutter-first-frame', hide);
       setTimeout(hide, 20000); // never leave the splash up forever
