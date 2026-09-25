@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'data/assets.dart';
 import 'state/app_settings.dart';
 import 'theme/app_theme.dart';
 import 'widgets/app_shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await AppSettings.instance.load();
+  await Future.wait([
+    AppSettings.instance.load(),
+    preloadAvatar(),
+  ]);
   runApp(const PortfolioApp());
 }
 

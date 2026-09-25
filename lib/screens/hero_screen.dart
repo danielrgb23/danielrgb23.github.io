@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../data/assets.dart';
 import '../state/strings.dart';
 import '../theme/app_theme.dart';
 import '../widgets/achievement_toast.dart';
@@ -138,7 +139,7 @@ class _HeroScreenState extends State<HeroScreen> with TickerProviderStateMixin {
                       },
                       child: ClipOval(
                         child: Image.asset(
-                          'assets/img/profile_image.jpg',
+                          avatarAsset,
                           fit: BoxFit.cover,
                         ),
                       ),
