@@ -20,8 +20,53 @@
 
   <title>Daniel Augusto — Mobile Software Engineer</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* Loading screen: shown instantly, removed on Flutter's first frame. */
+    html, body { margin: 0; height: 100%; background: #0d0221; }
+    #splash {
+      position: fixed; inset: 0; z-index: 10;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 22px;
+      background: #0d0221; color: #f1eaff;
+      font: 12px/1.6 "Courier New", monospace; letter-spacing: 2px;
+      transition: opacity .35s ease;
+    }
+    #splash.done { opacity: 0; pointer-events: none; }
+    #splash .logo { color: #ffcd3c; font-size: 14px; letter-spacing: 3px; }
+    #splash .bar {
+      width: 180px; height: 10px; border: 2px solid #3a1f66;
+      padding: 2px; box-sizing: content-box;
+    }
+    #splash .bar i {
+      display: block; height: 100%; width: 40%; background: #2de2ff;
+      box-shadow: 0 0 12px #2de2ff; animation: slide 1.1s steps(9) infinite;
+    }
+    #splash .hint { color: #a793cf; font-size: 11px; }
+    @keyframes slide { from { margin-left: 0; } to { margin-left: 60%; } }
+    @media (prefers-reduced-motion: reduce) {
+      #splash .bar i { animation: none; width: 100%; }
+    }
+  </style>
 </head>
 <body>
+  <div id="splash" role="status" aria-live="polite">
+    <div class="logo">D_R23&gt;</div>
+    <div class="bar"><i></i></div>
+    <div class="hint">LOADING...</div>
+  </div>
+  <script>
+    (function () {
+      var splash = document.getElementById('splash');
+      function hide() {
+        if (!splash) return;
+        splash.classList.add('done');
+        setTimeout(function () { splash && splash.remove(); splash = null; }, 400);
+      }
+      window.addEventListener('flutter-first-frame', hide);
+      setTimeout(hide, 20000); // never leave the splash up forever
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
